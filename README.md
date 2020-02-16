@@ -1,4 +1,4 @@
 # oatpp-openssl
 
- WIP
+ WIP - NOT READY TO USE !!!
  
