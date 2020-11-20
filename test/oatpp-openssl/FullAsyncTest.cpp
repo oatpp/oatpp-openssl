@@ -38,8 +38,8 @@
 
 #include "oatpp/parser/json/mapping/ObjectMapper.hpp"
 
-#include "oatpp/network/server/SimpleTCPConnectionProvider.hpp"
-#include "oatpp/network/client/SimpleTCPConnectionProvider.hpp"
+#include "oatpp/network/tcp/server/ConnectionProvider.hpp"
+#include "oatpp/network/tcp/client/ConnectionProvider.hpp"
 
 #include "oatpp/network/virtual_/client/ConnectionProvider.hpp"
 #include "oatpp/network/virtual_/server/ConnectionProvider.hpp"
@@ -55,10 +55,10 @@ namespace {
 
 class TestComponent {
 private:
-  v_int32 m_port;
+  v_uint16 m_port;
 public:
 
-  TestComponent(v_int32 port)
+  TestComponent(v_uint16 port)
     : m_port(port)
   {}
 
@@ -78,7 +78,7 @@ public:
       OATPP_COMPONENT(std::shared_ptr<oatpp::network::virtual_::Interface>, interface);
       streamProvider = oatpp::network::virtual_::server::ConnectionProvider::createShared(interface);
     } else {
-      streamProvider = oatpp::network::server::SimpleTCPConnectionProvider::createShared(m_port);
+      streamProvider = oatpp::network::tcp::server::ConnectionProvider::createShared({"localhost", m_port});
     }
 
     OATPP_LOGD("oatpp::openssl::Config", "pem='%s'", CERT_PEM_PATH);
@@ -93,7 +93,7 @@ public:
     return oatpp::web::server::HttpRouter::createShared();
   }());
 
-  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::server::ConnectionHandler>, serverConnectionHandler)([] {
+  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([] {
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
     OATPP_COMPONENT(std::shared_ptr<oatpp::async::Executor>, executor);
     return oatpp::web::server::AsyncHttpConnectionHandler::createShared(router, executor);
@@ -111,7 +111,7 @@ public:
       OATPP_COMPONENT(std::shared_ptr<oatpp::network::virtual_::Interface>, interface);
       streamProvider = oatpp::network::virtual_::client::ConnectionProvider::createShared(interface);
     } else {
-      streamProvider = oatpp::network::client::SimpleTCPConnectionProvider::createShared("127.0.0.1", m_port);
+      streamProvider = oatpp::network::tcp::client::ConnectionProvider::createShared({"localhost", m_port});
     }
 
     auto config = oatpp::openssl::Config::createDefaultClientConfigShared();
@@ -160,7 +160,7 @@ void FullAsyncTest::onRun() {
       { // test GET with path parameter
         auto response = client->getWithParams("my_test_param-Async", connection);
         OATPP_ASSERT(response->getStatusCode() == 200);
-        auto dto = response->readBodyToDto<app::TestDto>(objectMapper.get());
+        auto dto = response->readBodyToDto<oatpp::Object<app::TestDto>>(objectMapper.get());
         OATPP_ASSERT(dto);
         OATPP_ASSERT(dto->testValue == "my_test_param-Async");
       }
@@ -168,7 +168,7 @@ void FullAsyncTest::onRun() {
       { // test GET with header parameter
         auto response = client->getWithHeaders("my_test_header-Async", connection);
         OATPP_ASSERT(response->getStatusCode() == 200);
-        auto dto = response->readBodyToDto<app::TestDto>(objectMapper.get());
+        auto dto = response->readBodyToDto<oatpp::Object<app::TestDto>>(objectMapper.get());
         OATPP_ASSERT(dto);
         OATPP_ASSERT(dto->testValue == "my_test_header-Async");
       }
@@ -176,7 +176,7 @@ void FullAsyncTest::onRun() {
       { // test POST with body
         auto response = client->postBody("my_test_body-Async", connection);
         OATPP_ASSERT(response->getStatusCode() == 200);
-        auto dto = response->readBodyToDto<app::TestDto>(objectMapper.get());
+        auto dto = response->readBodyToDto<oatpp::Object<app::TestDto>>(objectMapper.get());
         OATPP_ASSERT(dto);
         OATPP_ASSERT(dto->testValue == "my_test_body-Async");
       }

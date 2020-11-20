@@ -26,7 +26,7 @@
 
 #include "oatpp-openssl/Connection.hpp"
 
-#include "oatpp/network/client/SimpleTCPConnectionProvider.hpp"
+#include "oatpp/network/tcp/client/ConnectionProvider.hpp"
 
 #include <openssl/crypto.h>
 
@@ -36,6 +36,7 @@ ConnectionProvider::ConnectionProvider(const std::shared_ptr<Config>& config,
                                        const std::shared_ptr<oatpp::network::ClientConnectionProvider>& streamProvider)
   : m_config(config)
   , m_streamProvider(streamProvider)
+  , m_ctx(nullptr)
 {
 
   setProperty(PROPERTY_HOST, streamProvider->getProperty(PROPERTY_HOST).toString());
@@ -50,6 +51,21 @@ ConnectionProvider::ConnectionProvider(const std::shared_ptr<Config>& config,
                "consider setting custom locking_callback.");
   }
 
+  initSSLClient();
+
+}
+
+void ConnectionProvider::initSSLClient() {
+
+  auto method = SSLv23_client_method();
+
+  m_ctx = SSL_CTX_new(method);
+  if (!m_ctx) {
+    throw std::runtime_error("[oatpp::openssl::client::ConnectionProvider::initSSLClient()]. Error. Can't create context.");
+  }
+
+  m_config->configureContext(m_ctx);
+
 }
 
 std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::shared_ptr<Config>& config,
@@ -57,34 +73,47 @@ std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::
   return std::shared_ptr<ConnectionProvider>(new ConnectionProvider(config, streamProvider));
 }
 
-std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::shared_ptr<Config>& config, const oatpp::String& host, v_uint16 port) {
-  return createShared(config, oatpp::network::client::SimpleTCPConnectionProvider::createShared(host, port));
+std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::shared_ptr<Config>& config,
+                                                                     const network::Address& address)
+{
+  return createShared(
+    config,
+    network::tcp::client::ConnectionProvider::createShared(address)
+  );
 }
-
   
-std::shared_ptr<oatpp::data::stream::IOStream> ConnectionProvider::getConnection(){
+std::shared_ptr<data::stream::IOStream> ConnectionProvider::get(){
 
-  Connection::TLSHandle tlsHandle = tls_client();
-  tls_configure(tlsHandle, m_config->getTLSConfig());
+//  oatpp::String host;
+//  auto hostName = m_streamProvider->getProperty(oatpp::network::ConnectionProvider::PROPERTY_HOST);
+//  if(hostName) {
+//    host = hostName.toString();
+//  }
 
-  oatpp::String host;
-  auto hostName = m_streamProvider->getProperty(oatpp::network::ConnectionProvider::PROPERTY_HOST);
-  if(hostName) {
-    host = hostName.toString();
+  auto transportStream = m_streamProvider->get();
+
+  if(!transportStream) {
+    throw std::runtime_error("[oatpp::openssl::client::ConnectionProvider::get()]: Error. Can't connect.");
   }
 
-  auto tlsObject = std::make_shared<TLSObject>(tlsHandle, TLSObject::Type::CLIENT, host);
-  auto connection = std::make_shared<Connection>(tlsObject, m_streamProvider->getConnection());
+  auto ssl = SSL_new(m_ctx);
+  SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
+  SSL_set_connect_state(ssl);
 
-  connection->setOutputStreamIOMode(oatpp::data::stream::IOMode::BLOCKING);
-  connection->setInputStreamIOMode(oatpp::data::stream::IOMode::BLOCKING);
+  //SSL_set_verify(ssl, SSL_VERIFY_NONE, nullptr);
 
-  connection->initContexts();
-  return connection;
+  auto sslConnection = std::make_shared<Connection>(ssl, transportStream);
+
+  sslConnection->setOutputStreamIOMode(data::stream::IOMode::BLOCKING);
+  sslConnection->setInputStreamIOMode(data::stream::IOMode::BLOCKING);
+
+  sslConnection->initContexts();
+
+  return sslConnection;
 
 }
 
-oatpp::async::CoroutineStarterForResult<const std::shared_ptr<oatpp::data::stream::IOStream>&> ConnectionProvider::getConnectionAsync() {
+oatpp::async::CoroutineStarterForResult<const std::shared_ptr<data::stream::IOStream>&> ConnectionProvider::getAsync() {
 
 
   class ConnectCoroutine : public oatpp::async::CoroutineWithResult<ConnectCoroutine, const std::shared_ptr<oatpp::data::stream::IOStream>&> {
@@ -103,7 +132,7 @@ oatpp::async::CoroutineStarterForResult<const std::shared_ptr<oatpp::data::strea
 
     Action act() override {
       /* get transport stream */
-      return m_streamProvider->getConnectionAsync().callbackTo(&ConnectCoroutine::onConnected);
+      return m_streamProvider->getAsync().callbackTo(&ConnectCoroutine::onConnected);
     }
 
     Action onConnected(const std::shared_ptr<oatpp::data::stream::IOStream>& stream) {
@@ -114,22 +143,23 @@ oatpp::async::CoroutineStarterForResult<const std::shared_ptr<oatpp::data::strea
 
     Action secureConnection() {
 
-      Connection::TLSHandle tlsHandle = tls_client();
-      tls_configure(tlsHandle, m_config->getTLSConfig());
-
-      oatpp::String host;
-      auto hostName = m_streamProvider->getProperty(oatpp::network::ConnectionProvider::PROPERTY_HOST);
-      if(hostName) {
-        host = hostName.toString();
-      }
-
-      auto tlsObject = std::make_shared<TLSObject>(tlsHandle, TLSObject::Type::CLIENT, host);
-      m_connection = std::make_shared<Connection>(tlsObject, m_stream);
-
-      m_connection->setOutputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
-      m_connection->setInputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
-
-      return m_connection->initContextsAsync().next(yieldTo(&ConnectCoroutine::onSuccess));
+//      Connection::TLSHandle tlsHandle = tls_client();
+//      tls_configure(tlsHandle, m_config->getTLSConfig());
+//
+//      oatpp::String host;
+//      auto hostName = m_streamProvider->getProperty(oatpp::network::ConnectionProvider::PROPERTY_HOST);
+//      if(hostName) {
+//        host = hostName.toString();
+//      }
+//
+//      auto tlsObject = std::make_shared<TLSObject>(tlsHandle, TLSObject::Type::CLIENT, host);
+//      m_connection = std::make_shared<Connection>(tlsObject, m_stream);
+//
+//      m_connection->setOutputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
+//      m_connection->setInputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
+//
+//      return m_connection->initContextsAsync().next(yieldTo(&ConnectCoroutine::onSuccess));
+      return _return(m_connection);
 
     }
 

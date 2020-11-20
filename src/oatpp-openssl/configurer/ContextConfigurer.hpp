@@ -22,29 +22,22 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_FullTest_hpp
-#define oatpp_test_web_FullTest_hpp
+#ifndef oatpp_openssl_configurer_ContextConfigurer_hpp
+#define oatpp_openssl_configurer_ContextConfigurer_hpp
 
-#include "oatpp-test/UnitTest.hpp"
+#include <openssl/ssl.h>
 
-namespace oatpp { namespace test { namespace openssl {
+namespace oatpp { namespace openssl { namespace configurer {
 
-class FullTest : public UnitTest {
-private:
-  v_uint16 m_port;
-  v_int32 m_iterationsPerStep;
+class ContextConfigurer {
 public:
-  
-  FullTest(v_uint16 port, v_int32 iterationsPerStep)
-    : UnitTest("TEST[web::FullTest]")
-    , m_port(port)
-    , m_iterationsPerStep(iterationsPerStep)
-  {}
 
-  void onRun() override;
-  
+  virtual ~ContextConfigurer() = default;
+
+  virtual void configure(SSL_CTX* ctx) = 0;
+
 };
 
 }}}
-  
-#endif /* oatpp_test_web_FullTest_hpp */
+
+#endif // oatpp_openssl_configurer_ContextConfigurer_hpp

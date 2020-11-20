@@ -10,8 +10,13 @@ add_library(${OATPP_THIS_MODULE_NAME}
         oatpp-openssl/client/ConnectionProvider.hpp
         oatpp-openssl/server/ConnectionProvider.cpp
         oatpp-openssl/server/ConnectionProvider.hpp
-        oatpp-openssl/TLSObject.cpp
-        oatpp-openssl/TLSObject.hpp
+        oatpp-openssl/configurer/CertificateChainFile.cpp
+        oatpp-openssl/configurer/CertificateChainFile.hpp
+        oatpp-openssl/configurer/CertificateFile.cpp
+        oatpp-openssl/configurer/CertificateFile.hpp
+        oatpp-openssl/configurer/ContextConfigurer.hpp
+        oatpp-openssl/configurer/PrivateKeyFile.cpp
+        oatpp-openssl/configurer/PrivateKeyFile.hpp
 )
 
 set_target_properties(${OATPP_THIS_MODULE_NAME} PROPERTIES

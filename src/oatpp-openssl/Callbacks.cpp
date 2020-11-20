@@ -25,6 +25,8 @@
 #include "Callbacks.hpp"
 
 #include <openssl/crypto.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
 namespace oatpp { namespace openssl {
 
@@ -44,6 +46,11 @@ void Callbacks::lockingCallback(int mode, int n, const char* file, int line) {
   } else {
     LOCKS[n].unlock();
   }
+}
+
+void init() {
+  SSL_load_error_strings();
+  OpenSSL_add_ssl_algorithms();
 }
   
 }}

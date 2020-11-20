@@ -37,40 +37,32 @@ Connection::ConnectionContext::ConnectionContext(Connection* connection, data::s
 
 void Connection::ConnectionContext::init() {
 
-  if(!m_connection->m_initialized) {
+  if(m_connection->m_initialized) {
+    return;
+  }
 
-    m_connection->m_initialized = true;
+  m_connection->m_initialized = true;
 
-    auto tlsObject = m_connection->m_tlsObject;
+  if (!SSL_is_init_finished(m_connection->m_ssl)) {
 
-    if (tlsObject->getType() == TLSObject::Type::SERVER) {
+    int res;
 
-      auto res = tls_accept_cbs(tlsObject->getTLSHandle(), &m_connection->m_tlsHandle, readCallback, writeCallback, m_connection);
+    do {
 
-      if (res != 0) {
-        OATPP_LOGD("[oatpp::openssl::Connection::ConnectionContext::init()]", "Error on call to 'tls_accept_cbs'. res=%d", res);
+      res = SSL_do_handshake(m_connection->m_ssl);
+      int err = SSL_get_error(m_connection->m_ssl, res);
+
+      switch (err) {
+        case SSL_ERROR_NONE:
+        case SSL_ERROR_WANT_READ:
+        case SSL_ERROR_WANT_WRITE:
+          break;
+        default:
+          OATPP_LOGE("[oatpp::openssl::Connection::ConnectionContext::init()]", "Error. Handshake failed. err=%d", err);
+          throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::init()]: Error. Handshake failed.");
       }
 
-    } else if (tlsObject->getType() == TLSObject::Type::CLIENT) {
-
-      m_connection->m_tlsHandle = tlsObject->getTLSHandle();
-      const char* host = nullptr;
-      if(tlsObject->getServerName()) {
-        host = (const char*) tlsObject->getServerName()->getData();
-      }
-      auto res = tls_connect_cbs(m_connection->m_tlsHandle,
-                                 readCallback, writeCallback,
-                                 m_connection, host);
-
-      tlsObject->annul();
-
-      if (res != 0) {
-        OATPP_LOGD("[oatpp::openssl::Connection::ConnectionContext::init()]", "Error on call to 'tls_connect_cbs'. res=%d", res);
-      }
-
-    } else {
-      throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::init()]: Error. Unknown TLSObject type.");
-    }
+    } while(res != 1);
 
   }
 
@@ -88,59 +80,7 @@ async::CoroutineStarter Connection::ConnectionContext::initAsync() {
     {}
 
     Action act() override {
-
-      if(m_connection->m_initialized) {
-        return finish();
-      }
-
-      auto tlsObject = m_connection->m_tlsObject;
-
-      if (tlsObject->getType() == TLSObject::Type::SERVER) {
-        return yieldTo(&HandshakeCoroutine::initServer);
-      } else if (tlsObject->getType() == TLSObject::Type::CLIENT) {
-        return yieldTo(&HandshakeCoroutine::initClient);
-      }
-
-      throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::init()]: Error. Unknown TLSObject type.");
-
-    }
-
-    Action initServer() {
-
-      auto tlsObject = m_connection->m_tlsObject;
-      auto res = tls_accept_cbs(tlsObject->getTLSHandle(), &m_connection->m_tlsHandle, readCallback, writeCallback, m_connection);
-
-      if (res != 0) {
-        return error<Error>("[oatpp::openssl::Connection::ConnectionContext::initAsync(){initServer()}]: Error. Handshake failed.");
-      }
-
-      /* Handshake successful */
-      m_connection->m_initialized = true;
       return finish();
-
-    }
-
-    Action initClient() {
-
-      auto tlsObject = m_connection->m_tlsObject;
-      m_connection->m_tlsHandle = tlsObject->getTLSHandle();
-      const char* host = nullptr;
-      if(tlsObject->getServerName()) {
-        host = (const char*) tlsObject->getServerName()->getData();
-      }
-      auto res = tls_connect_cbs(m_connection->m_tlsHandle,
-                                 readCallback, writeCallback,
-                                 m_connection, host);
-
-      tlsObject->annul();
-
-      if (res != 0) {
-        return error<Error>("[oatpp::openssl::Connection::ConnectionContext::initAsync(){initClient()}]: Error. Handshake failed.");
-      }
-
-      m_connection->m_initialized = true;
-      return finish();
-
     }
 
   };
@@ -162,81 +102,96 @@ data::stream::StreamType Connection::ConnectionContext::getStreamType() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// IOLockGuard
-
-Connection::IOLockGuard::IOLockGuard(Connection* connection, async::Action* checkAction)
-  : m_connection(connection)
-  , m_checkAction(checkAction)
-{
-  m_connection->packIOAction(m_checkAction);
-  m_locked = true;
-}
-
-Connection::IOLockGuard::~IOLockGuard() {
-  if(m_locked) {
-    m_connection->m_ioLock.unlock();
-  }
-}
-
-bool Connection::IOLockGuard::unpackAndCheck() {
-  async::Action* check = m_connection->unpackIOAction();
-  m_locked = false;
-  return check == m_checkAction;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Connection
 
-ssize_t Connection::writeCallback(struct tls *_ctx, const void *_buf, size_t _buflen, void *_cb_arg) {
+int Connection::createBio(BIO* bio) {
+  BIO_set_init(bio, 1);
+  return 1;
+}
 
-  auto connection = static_cast<Connection*>(_cb_arg);
-  async::Action* ioAction = connection->unpackIOAction();
+int Connection::destroyBio(BIO* bio) {
+  return 1;
+}
 
-  v_io_size res;
-  if(ioAction && ioAction->isNone()) {
-    res = connection->m_stream->write(_buf, _buflen, *ioAction);
-    if(res == IOError::RETRY_READ || res == IOError::RETRY_WRITE) {
-      res = TLS_WANT_POLLOUT;
-    }
-  } else {
-    res = TLS_WANT_POLLOUT;
+long Connection::BioCtrl(BIO* bio, int cmd, long larg, void *parg) {
+  switch(cmd) {
+    case BIO_CTRL_FLUSH: return 1;
+  }
+  return 0;
+}
+
+BIO_METHOD* Connection::createBioMethod() {
+  BIO_METHOD* m = BIO_meth_new(BIO_get_new_index(), "oatpp-openssl::BIO_METHOD");
+  BIO_meth_set_write(m, &Connection::BioWrite);
+  BIO_meth_set_read(m, &Connection::BioRead);
+  BIO_meth_set_create(m, &Connection::createBio);
+  BIO_meth_set_destroy(m, &Connection::destroyBio);
+  BIO_meth_set_ctrl(m, &Connection::BioCtrl);
+  return m;
+}
+
+BIO_METHOD* Connection::getBioMethod() {
+  static BIO_METHOD* m = createBioMethod();
+  return m;
+}
+
+int Connection::BioWrite(BIO* bio, const char* data, int size) {
+
+  auto _this = static_cast<Connection*>(BIO_get_data(bio));
+  _this->m_writeAction = async::Action::createActionByType(async::Action::TYPE_NONE);
+  auto res = _this->m_stream->write(data, size, _this->m_writeAction);
+
+  if(res > 0) {
+    return res;
   }
 
-  connection->packIOAction(ioAction);
+  switch(res) {
+    case IOError::RETRY_READ: {
+      BIO_set_retry_read(bio);
+    }
+    case IOError::RETRY_WRITE: {
+      BIO_set_retry_write(bio);
+    }
+  }
 
-  return (ssize_t)res;
+  return -1;
+}
+
+int Connection::BioRead(BIO* bio, char* data, int size) {
+
+  auto _this = static_cast<Connection*>(BIO_get_data(bio));
+  _this->m_readAction = async::Action::createActionByType(async::Action::TYPE_NONE);
+  auto res = _this->m_stream->read(data, size, _this->m_readAction);
+
+  if(res > 0) {
+    return res;
+  }
+
+  switch(res) {
+    case IOError::RETRY_READ: {
+      BIO_set_retry_read(bio);
+    }
+    case IOError::RETRY_WRITE: {
+      BIO_set_retry_write(bio);
+    }
+  }
+
+  return -1;
 
 }
 
-ssize_t Connection::readCallback(struct tls *_ctx, void *_buf, size_t _buflen, void *_cb_arg) {
-
-  auto connection = static_cast<Connection*>(_cb_arg);
-  async::Action* ioAction = connection->unpackIOAction();
-
-  v_io_size res;
-  if(ioAction && ioAction->isNone()) {
-    res = connection->m_stream->read(_buf, _buflen, *ioAction);
-    if(res == IOError::RETRY_READ || res == IOError::RETRY_WRITE) {
-      res = TLS_WANT_POLLOUT;
-    }
-  } else {
-    res = TLS_WANT_POLLOUT;
-  }
-
-  connection->packIOAction(ioAction);
-
-  return (ssize_t)res;
-
-}
-
-Connection::Connection(const std::shared_ptr<TLSObject>& tlsObject,
-                       const std::shared_ptr<oatpp::data::stream::IOStream>& stream)
-  : m_tlsHandle(nullptr)
-  , m_tlsObject(tlsObject)
+Connection::Connection(SSL* ssl, const std::shared_ptr<oatpp::data::stream::IOStream>& stream)
+  : m_ssl(ssl)
+  , m_rbio(BIO_new(getBioMethod()))
+  , m_wbio(BIO_new(getBioMethod()))
   , m_stream(stream)
   , m_initialized(false)
-  , m_ioAction(nullptr)
 {
+
+  BIO_set_data(m_rbio, this);
+  BIO_set_data(m_wbio, this);
+
+  SSL_set_bio(m_ssl, m_rbio, m_wbio);
 
   auto& streamInContext = stream->getInputStreamContext();
   data::stream::Context::Properties inProperties(streamInContext.getProperties());
@@ -268,68 +223,42 @@ Connection::~Connection(){
     delete m_outContext;
   }
   close();
-  if(m_tlsHandle != nullptr) {
-    tls_free(m_tlsHandle);
-  }
 }
 
-void Connection::packIOAction(async::Action* action) {
-  m_ioLock.lock();
-  m_ioAction = action;
-}
+oatpp::v_io_size Connection::write(const void* buff, v_buff_size count, async::Action& action) {
 
-async::Action* Connection::unpackIOAction() {
-  auto result = m_ioAction;
-  m_ioAction = nullptr;
-  m_ioLock.unlock();
-  return result;
-}
-
-oatpp::v_io_size Connection::write(const void *buff, v_buff_size count, async::Action& action){
-
-  IOLockGuard ioGuard(this, &action);
-
-  auto result = tls_write(m_tlsHandle, buff, count);
-
-  if(!ioGuard.unpackAndCheck()) {
-    OATPP_LOGE("[oatpp::openssl::Connection::write(...)]", "Error. Packed action check failed!!!");
-    return oatpp::IOError::BROKEN_PIPE;
+  auto res = SSL_write(m_ssl, buff, count);
+  if(res > 0) {
+    return res;
   }
 
-  if(result < 0) {
-    switch (result) {
-      case TLS_WANT_POLLIN: return oatpp::IOError::RETRY_WRITE;
-      case TLS_WANT_POLLOUT: return oatpp::IOError::RETRY_WRITE;
-      default:
-        return oatpp::IOError::BROKEN_PIPE;
-    }
+  int err = SSL_get_error(m_ssl, res);
+  switch (err) {
+    case SSL_ERROR_NONE:
+    case SSL_ERROR_WANT_READ:
+    case SSL_ERROR_WANT_WRITE: return IOError::RETRY_WRITE;
   }
 
-  return result;
+  return IOError::BROKEN_PIPE;
 
 }
 
 oatpp::v_io_size Connection::read(void *buff, v_buff_size count, async::Action& action){
 
-  IOLockGuard ioGuard(this, &action);
+  auto res = SSL_read(m_ssl, buff, count);
 
-  auto result = tls_read(m_tlsHandle, buff, count);
-
-  if(!ioGuard.unpackAndCheck()) {
-    OATPP_LOGE("[oatpp::openssl::Connection::read(...)]", "Error. Packed action check failed!!!");
-    return oatpp::IOError::BROKEN_PIPE;
+  if(res > 0) {
+    return res;
   }
 
-  if(result < 0) {
-    switch (result) {
-      case TLS_WANT_POLLIN: return oatpp::IOError::RETRY_WRITE;
-      case TLS_WANT_POLLOUT: return oatpp::IOError::RETRY_WRITE;
-      default:
-        return oatpp::IOError::BROKEN_PIPE;
-    }
+  int err = SSL_get_error(m_ssl, res);
+  switch (err) {
+    case SSL_ERROR_NONE:
+    case SSL_ERROR_WANT_READ:
+    case SSL_ERROR_WANT_WRITE: return IOError::RETRY_READ;
   }
 
-  return result;
+  return IOError::BROKEN_PIPE;
 
 }
 
@@ -358,9 +287,7 @@ oatpp::data::stream::Context& Connection::getInputStreamContext() {
 }
 
 void Connection::close(){
-  if(m_tlsHandle != nullptr) {
-    tls_close(m_tlsHandle);
-  }
+
 }
   
 }}

@@ -24,58 +24,49 @@
 
 #include "Config.hpp"
 
+#include "configurer/CertificateFile.hpp"
+#include "configurer/PrivateKeyFile.hpp"
+#include "configurer/CertificateChainFile.hpp"
+
 namespace oatpp { namespace openssl {
 
-Config::Config()
-  : m_config(tls_config_new())
-{}
+Config::Config() {}
+
+Config::~Config(){}
 
 std::shared_ptr<Config> Config::createShared() {
   return std::make_shared<Config>();
 }
 
-std::shared_ptr<Config> Config::createDefaultServerConfigShared(const char* serverCertFile, const char* privateKeyFile) {
-
-  unsigned int protocols = TLS_PROTOCOLS_ALL;
-  const char *ciphers = "secure";
-  
+std::shared_ptr<Config> Config::createDefaultServerConfigShared(const oatpp::String& certFile,
+                                                                const oatpp::String& privateKeyFile,
+                                                                const oatpp::String& certChainFile)
+{
   auto config = createShared();
-  
-  tls_config_set_protocols(config->getTLSConfig(), protocols);
-  
-  if(tls_config_set_ciphers(config->getTLSConfig(), ciphers) < 0) {
-    throw std::runtime_error("[oatpp::openssl::Config::createDefaultServerConfigShared]: failed call to tls_config_set_ciphers()");
+  config->addContextConfigurer(std::make_shared<configurer::CertificateFile>(certFile));
+  config->addContextConfigurer(std::make_shared<configurer::PrivateKeyFile>(privateKeyFile));
+  if(certChainFile) {
+    config->addContextConfigurer(std::make_shared<configurer::CertificateChainFile>(certChainFile));
   }
-  
-  if(tls_config_set_key_file(config->getTLSConfig(), privateKeyFile) < 0) {
-    throw std::runtime_error("[oatpp::openssl::Config::createDefaultServerConfigShared]: failed call to tls_config_set_key_file()");
-  }
-  
-  if(tls_config_set_cert_file(config->getTLSConfig(), serverCertFile) < 0) {
-    throw std::runtime_error("[oatpp::openssl::Config::createDefaultServerConfigShared]: failed call to tls_config_set_cert_file()");
-  }
-  
   return config;
-  
 }
 
 std::shared_ptr<Config> Config::createDefaultClientConfigShared() {
-
-  auto config = createShared();
-
-  tls_config_insecure_noverifycert(config->getTLSConfig());
-  tls_config_insecure_noverifyname(config->getTLSConfig());
-
-  return config;
-
+  return createShared();
 }
 
-Config::~Config(){
-  tls_config_free(m_config);
+void Config::clearContextConfigurers() {
+  m_contextConfigs.clear();
 }
 
-Config::TLSConfig Config::getTLSConfig() {
-  return m_config;
+void Config::addContextConfigurer(const std::shared_ptr<configurer::ContextConfigurer>& contextConfigurer) {
+  m_contextConfigs.push_back(contextConfigurer);
+}
+
+void Config::configureContext(SSL_CTX* ctx) const {
+  for(auto& c : m_contextConfigs) {
+    c->configure(ctx);
+  }
 }
   
 }}

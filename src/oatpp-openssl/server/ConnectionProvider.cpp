@@ -26,8 +26,7 @@
 
 #include "oatpp-openssl/Connection.hpp"
 
-#include "oatpp/network/server/SimpleTCPConnectionProvider.hpp"
-#include "oatpp/core/utils/ConversionUtils.hpp"
+#include "oatpp/network/tcp/server/ConnectionProvider.hpp"
 
 namespace oatpp { namespace openssl { namespace server {
 
@@ -41,56 +40,67 @@ ConnectionProvider::ConnectionProvider(const std::shared_ptr<Config>& config,
   setProperty(PROPERTY_HOST, streamProvider->getProperty(PROPERTY_HOST).toString());
   setProperty(PROPERTY_PORT, streamProvider->getProperty(PROPERTY_PORT).toString());
 
-  m_tlsObject = instantiateTLSServer();
+  instantiateTLSServer();
 
 }
 
 std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::shared_ptr<Config>& config,
-                                                                     const std::shared_ptr<oatpp::network::ServerConnectionProvider>& streamProvider){
+                                                                     const std::shared_ptr<oatpp::network::ServerConnectionProvider>& streamProvider)
+{
   return std::shared_ptr<ConnectionProvider>(new ConnectionProvider(config, streamProvider));
 }
 
-std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::shared_ptr<Config>& config, v_uint16 port) {
-  return createShared(config, oatpp::network::server::SimpleTCPConnectionProvider::createShared(port));
+std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::shared_ptr<Config>& config,
+                                                                     const network::Address& address,
+                                                                     bool useExtendedConnections)
+{
+  return createShared(
+    config,
+    network::tcp::server::ConnectionProvider::createShared(address, useExtendedConnections)
+  );
 }
 
 ConnectionProvider::~ConnectionProvider() {
-  close();
+  stop();
 }
 
-std::shared_ptr<TLSObject> ConnectionProvider::instantiateTLSServer() {
+void ConnectionProvider::instantiateTLSServer() {
 
-  Connection::TLSHandle handle = tls_server();
+  auto method = SSLv23_server_method();
 
-  if(handle == NULL) {
-    throw std::runtime_error("[oatpp::openssl::server::ConnectionProvider::instantiateTLSServer()]: Failed to create tls_server");
+  m_ctx = SSL_CTX_new(method);
+  if (!m_ctx) {
+    throw std::runtime_error("[oatpp::openssl::server::ConnectionProvider::instantiateTLSServer()]. Error. Can't create context.");
   }
 
-  if (tls_configure(handle, m_config->getTLSConfig()) < 0) {
-    OATPP_LOGD("[oatpp::openssl::server::ConnectionProvider::instantiateTLSServer()]", "Error on call to 'tls_configure'. %s", tls_error(handle));
-    throw std::runtime_error( "[oatpp::openssl::server::ConnectionProvider::instantiateTLSServer()]: Failed to configure tls_server");
-  }
-
-  return std::make_shared<TLSObject>(handle, TLSObject::Type::SERVER, nullptr);
+  SSL_CTX_set_ecdh_auto(m_ctx, 1);
+  m_config->configureContext(m_ctx);
 
 }
 
-void ConnectionProvider::close() {
+void ConnectionProvider::stop() {
   if(!m_closed) {
     m_closed = true;
-    if(m_tlsObject) {
-      m_tlsObject->close();
-    }
-    m_streamProvider->close();
+    m_streamProvider->stop();
   }
 }
 
-std::shared_ptr<oatpp::data::stream::IOStream> ConnectionProvider::getConnection(){
-  auto transportStream = m_streamProvider->getConnection();
+std::shared_ptr<data::stream::IOStream> ConnectionProvider::get(){
+
+  auto transportStream = m_streamProvider->get();
+
   if(transportStream) {
-    return std::make_shared<Connection>(m_tlsObject, transportStream);
+
+    auto ssl = SSL_new(m_ctx);
+    SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
+    SSL_set_accept_state(ssl);
+
+    return std::make_shared<Connection>(ssl, transportStream);
+
   }
+
   return nullptr;
+
 }
 
 }}}

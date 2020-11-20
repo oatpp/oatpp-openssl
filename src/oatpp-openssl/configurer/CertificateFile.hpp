@@ -22,48 +22,27 @@
  *
  ***************************************************************************/
 
-#include "TLSObject.hpp"
+#ifndef oatpp_openssl_configurer_CertificateFile_hpp
+#define oatpp_openssl_configurer_CertificateFile_hpp
 
-namespace oatpp { namespace openssl {
+#include "ContextConfigurer.hpp"
 
-TLSObject::TLSObject(TLSHandle tlsHandle, Type type, const oatpp::String& serverName)
-  : m_tlsHandle(tlsHandle)
-  , m_type(type)
-  , m_serverName(serverName)
-  , m_closed(false)
-{}
+#include "oatpp/core/Types.hpp"
 
-TLSObject::~TLSObject() {
-  close();
-}
+namespace oatpp { namespace openssl { namespace configurer {
 
-TLSObject::TLSHandle TLSObject::getTLSHandle() {
-  return m_tlsHandle;
-}
+class CertificateFile : public ContextConfigurer {
+private:
+  oatpp::String m_filename;
+  int m_filetype;
+public:
 
-TLSObject::Type TLSObject::getType() {
-  return m_type;
-}
+  CertificateFile(const oatpp::String& filename, int filetype = SSL_FILETYPE_PEM);
 
-oatpp::String TLSObject::getServerName() {
-  return m_serverName;
-}
+  void configure(SSL_CTX* ctx) override;
 
-void TLSObject::annul() {
-  m_closed = true;
-  m_tlsHandle = nullptr;
-}
+};
 
-void TLSObject::close() {
-  if(!m_closed) {
-    m_closed = true;
-    tls_close(m_tlsHandle);
-    tls_free(m_tlsHandle);
-  }
-}
+}}}
 
-bool TLSObject::isClosed() {
-  return m_closed;
-}
-
-}}
+#endif // oatpp_openssl_configurer_CertificateFile_hpp

@@ -25,65 +25,34 @@
 #ifndef oatpp_openssl_Config_hpp
 #define oatpp_openssl_Config_hpp
 
-#include "oatpp/core/Types.hpp"
+#include "oatpp-openssl/configurer/ContextConfigurer.hpp"
 
-#include <tls.h>
-#include <memory>
+#include "oatpp/core/Types.hpp"
 
 namespace oatpp { namespace openssl {
 
-/**
- * Wrapper over `tls_config`.
- */
 class Config {
-public:
-  typedef struct tls_config* TLSConfig;
 private:
-  TLSConfig m_config;
+  std::list<std::shared_ptr<configurer::ContextConfigurer>> m_contextConfigs;
 public:
-  /**
-   * Constructor.
-   */
+
   Config();
-public:
 
-  /**
-   * Create shared Config.
-   * @return - `std::shared_ptr` to Config.
-   */
-  static std::shared_ptr<Config> createShared();
-
-  /**
-   * Create default config for server with enabled TLS.
-   * @param serverCertFile - server certificate.
-   * @param privateKeyFile - private key.
-   * @return - `std::shared_ptr` to Config.
-   */
-  static std::shared_ptr<Config> createDefaultServerConfigShared(const char* serverCertFile, const char* privateKeyFile);
-
-  /**
-   * Create default client config. <br>
-   * Please note - this method automatically sets: <br>
-   * <ul>
-   *   <li>`tls_config_insecure_noverifycert`</li>
-   *   <li>`tls_config_insecure_noverifyname`</li>
-   * </ul> <br>
-   * Create with &l:Config::createShared; instead in order to override this behavior.
-   * @return - `std::shared_ptr` to Config.
-   */
-  static std::shared_ptr<Config> createDefaultClientConfigShared();
-
-  /**
-   * Virtual destructor.
-   */
   virtual ~Config();
 
-  /**
-   * Get underlying tls_config.
-   * @return - `tls_config*`.
-   */
-  TLSConfig getTLSConfig();
-  
+  static std::shared_ptr<Config> createShared();
+
+  static std::shared_ptr<Config> createDefaultServerConfigShared(const oatpp::String& certFile,
+                                                                 const oatpp::String& privateKeyFile,
+                                                                 const oatpp::String& certChainFile = nullptr);
+
+  static std::shared_ptr<Config> createDefaultClientConfigShared();
+
+  void clearContextConfigurers();
+  void addContextConfigurer(const std::shared_ptr<configurer::ContextConfigurer>& contextConfigurer);
+
+  void configureContext(SSL_CTX* ctx) const;
+
 };
   
 }}

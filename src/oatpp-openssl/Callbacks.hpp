@@ -63,6 +63,8 @@ public:
   static void lockingCallback(int mode, int n, const char* file, int line);
   
 };
+
+void init();
   
 }}
 

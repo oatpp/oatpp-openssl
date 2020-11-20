@@ -26,9 +26,9 @@
 #define oatpp_openssl_server_ConnectionProvider_hpp
 
 #include "oatpp-openssl/Config.hpp"
-#include "oatpp-openssl/TLSObject.hpp"
 
-#include "oatpp/network/server/SimpleTCPConnectionProvider.hpp"
+#include "oatpp/network/Address.hpp"
+#include "oatpp/network/tcp/server/ConnectionProvider.hpp"
 
 namespace oatpp { namespace openssl { namespace server {
 
@@ -41,9 +41,10 @@ private:
   std::shared_ptr<Config> m_config;
   std::shared_ptr<oatpp::network::ServerConnectionProvider> m_streamProvider;
   bool m_closed;
-  std::shared_ptr<TLSObject> m_tlsObject;
 private:
-  std::shared_ptr<TLSObject> instantiateTLSServer();
+  void instantiateTLSServer();
+private:
+  SSL_CTX* m_ctx;
 public:
   /**
    * Constructor.
@@ -64,13 +65,16 @@ public:
                                                           const std::shared_ptr<oatpp::network::ServerConnectionProvider>& streamProvider);
 
   /**
-   * Create shared ConnectionProvider using &id:oatpp::network::server::SimpleTCPConnectionProvider;
-   * as a provider of underlying transport stream.
+   * Create shared ConnectionProvider.
    * @param config - &id:oatpp::openssl::Config;.
-   * @param port - port to listen on.
+   * @param address - &id:oatpp::network::Address;.
+   * @param useExtendedConnections - set `true` to use &l:ConnectionProvider::ExtendedConnection;.
+   * `false` to use &id:oatpp::network::tcp::Connection;.
    * @return - `std::shared_ptr` to ConnectionProvider.
    */
-  static std::shared_ptr<ConnectionProvider> createShared(const std::shared_ptr<Config>& config, v_uint16 port);
+  static std::shared_ptr<ConnectionProvider> createShared(const std::shared_ptr<Config>& config,
+                                                          const network::Address& address,
+                                                          bool useExtendedConnections = false);
 
 
   /**
@@ -81,13 +85,13 @@ public:
   /**
    * Close all handles.
    */
-  void close() override;
+  void stop() override;
 
   /**
    * Get incoming connection.
    * @return &id:oatpp::data::stream::IOStream;.
    */
-  std::shared_ptr<IOStream> getConnection() override;
+  std::shared_ptr<data::stream::IOStream> get() override;
 
   /**
    * No need to implement this.<br>
@@ -97,21 +101,21 @@ public:
    * <br>
    * *It may be implemented later*
    */
-  oatpp::async::CoroutineStarterForResult<const std::shared_ptr<oatpp::data::stream::IOStream>&> getConnectionAsync() override {
+  oatpp::async::CoroutineStarterForResult<const std::shared_ptr<data::stream::IOStream>&> getAsync() override {
     /*
      *  No need to implement this.
      *  For Asynchronous IO in oatpp it is considered to be a good practice
      *  to accept connections in a seperate thread with the blocking accept()
      *  and then process connections in Asynchronous manner with non-blocking read/write
      */
-    throw std::runtime_error("oatpp::openssl::server::ConnectionProvider::getConnectionAsync not implemented.");
+    throw std::runtime_error("oatpp::openssl::server::ConnectionProvider::getAsync not implemented.");
   }
 
   /**
    * Does nothing.
    * @param connection
    */
-  void invalidateConnection(const std::shared_ptr<IOStream>& connection) override {
+  void invalidate(const std::shared_ptr<data::stream::IOStream>& connection) override {
     (void)connection;
     // DO Nothing.
   }

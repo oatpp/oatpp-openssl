@@ -22,29 +22,27 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_FullTest_hpp
-#define oatpp_test_web_FullTest_hpp
+#ifndef oatpp_openssl_configurer_PrivateKeyFile_hpp
+#define oatpp_openssl_configurer_PrivateKeyFile_hpp
 
-#include "oatpp-test/UnitTest.hpp"
+#include "ContextConfigurer.hpp"
 
-namespace oatpp { namespace test { namespace openssl {
+#include "oatpp/core/Types.hpp"
 
-class FullTest : public UnitTest {
+namespace oatpp { namespace openssl { namespace configurer {
+
+class PrivateKeyFile : public ContextConfigurer {
 private:
-  v_uint16 m_port;
-  v_int32 m_iterationsPerStep;
+  oatpp::String m_filename;
+  int m_filetype;
 public:
-  
-  FullTest(v_uint16 port, v_int32 iterationsPerStep)
-    : UnitTest("TEST[web::FullTest]")
-    , m_port(port)
-    , m_iterationsPerStep(iterationsPerStep)
-  {}
 
-  void onRun() override;
-  
+  PrivateKeyFile(const oatpp::String& filename, int filetype = SSL_FILETYPE_PEM);
+
+  void configure(SSL_CTX* ctx) override;
+
 };
 
 }}}
-  
-#endif /* oatpp_test_web_FullTest_hpp */
+
+#endif // oatpp_openssl_configurer_PrivateKeyFile_hpp

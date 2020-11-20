@@ -22,29 +22,20 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_FullTest_hpp
-#define oatpp_test_web_FullTest_hpp
+#include "CertificateFile.hpp"
 
-#include "oatpp-test/UnitTest.hpp"
+namespace oatpp { namespace openssl { namespace configurer {
 
-namespace oatpp { namespace test { namespace openssl {
+CertificateFile::CertificateFile(const oatpp::String &filename, int filetype)
+  : m_filename(filename)
+  , m_filetype(filetype)
+{}
 
-class FullTest : public UnitTest {
-private:
-  v_uint16 m_port;
-  v_int32 m_iterationsPerStep;
-public:
-  
-  FullTest(v_uint16 port, v_int32 iterationsPerStep)
-    : UnitTest("TEST[web::FullTest]")
-    , m_port(port)
-    , m_iterationsPerStep(iterationsPerStep)
-  {}
-
-  void onRun() override;
-  
-};
+void CertificateFile::configure(SSL_CTX *ctx) {
+  if (SSL_CTX_use_certificate_file(ctx, m_filename->c_str(), m_filetype) <= 0) {
+    throw std::runtime_error("[oatpp::openssl::configurer::CertificateFile::configure()]: Error. "
+                             "Call to 'SSL_CTX_use_certificate_file' failed.");
+  }
+}
 
 }}}
-  
-#endif /* oatpp_test_web_FullTest_hpp */

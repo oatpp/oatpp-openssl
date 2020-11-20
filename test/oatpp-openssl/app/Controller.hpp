@@ -57,7 +57,8 @@ public:
   }
   
   ENDPOINT("GET", "params/{param}", getWithParams,
-           PATH(String, param)) {
+           PATH(String, param))
+  {
     //OATPP_LOGD(TAG, "GET params/%s", param->c_str());
     auto dto = TestDto::createShared();
     dto->testValue = param;
@@ -65,24 +66,27 @@ public:
   }
   
   ENDPOINT("GET", "queries", getWithQueries,
-           QUERY(String, name), QUERY(Int32, age)) {
+           QUERY(String, name), QUERY(Int32, age))
+  {
     auto dto = TestDto::createShared();
-    dto->testValue = "name=" + name + "&age=" + oatpp::utils::conversion::int32ToStr(age->getValue());
+    dto->testValue = "name=" + name + "&age=" + oatpp::utils::conversion::int32ToStr(age);
     return createDtoResponse(Status::CODE_200, dto);
   }
 
   ENDPOINT("GET", "queries/map", getWithQueriesMap,
-           QUERIES(const QueryParams&, queries)) {
+           QUERIES(QueryParams, queries))
+  {
     auto dto = TestDto::createShared();
-    dto->testMap = dto->testMap->createShared();
+    dto->testMap = Fields<String>({});
     for(auto& it : queries.getAll_Unsafe()) {
-      dto->testMap->put(it.first.toString(), it.second.toString());
+      dto->testMap->push_back({it.first.toString(), it.second.toString()});
     }
     return createDtoResponse(Status::CODE_200, dto);
   }
   
   ENDPOINT("GET", "headers", getWithHeaders,
-           HEADER(String, param, "X-TEST-HEADER")) {
+           HEADER(String, param, "X-TEST-HEADER"))
+  {
     //OATPP_LOGD(TAG, "GET headers {X-TEST-HEADER: %s}", param->c_str());
     auto dto = TestDto::createShared();
     dto->testValue = param;
@@ -90,7 +94,8 @@ public:
   }
   
   ENDPOINT("POST", "body", postBody,
-           BODY_STRING(String, body)) {
+           BODY_STRING(String, body))
+  {
     //OATPP_LOGD(TAG, "POST body %s", body->c_str());
     auto dto = TestDto::createShared();
     dto->testValue = body;
@@ -98,13 +103,15 @@ public:
   }
 
   ENDPOINT("POST", "echo", echo,
-           BODY_STRING(String, body)) {
+           BODY_STRING(String, body))
+  {
     //OATPP_LOGD(TAG, "POST body(echo) size=%d", body->getSize());
     return createResponse(Status::CODE_200, body);
   }
 
   ENDPOINT("GET", "header-value-set", headerValueSet,
-           HEADER(String, valueSet, "X-VALUE-SET")) {
+           HEADER(String, valueSet, "X-VALUE-SET"))
+  {
     oatpp::web::protocol::http::HeaderValueData values;
     oatpp::web::protocol::http::Parser::parseHeaderValueData(values, valueSet, ',');
     OATPP_ASSERT_HTTP(values.tokens.find("VALUE_1") != values.tokens.end(), Status::CODE_400, "No header 'VALUE_1' in value set");

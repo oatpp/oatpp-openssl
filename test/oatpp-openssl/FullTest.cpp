@@ -38,8 +38,8 @@
 
 #include "oatpp/parser/json/mapping/ObjectMapper.hpp"
 
-#include "oatpp/network/server/SimpleTCPConnectionProvider.hpp"
-#include "oatpp/network/client/SimpleTCPConnectionProvider.hpp"
+#include "oatpp/network/tcp/server/ConnectionProvider.hpp"
+#include "oatpp/network/tcp/client/ConnectionProvider.hpp"
 
 #include "oatpp/network/virtual_/client/ConnectionProvider.hpp"
 #include "oatpp/network/virtual_/server/ConnectionProvider.hpp"
@@ -55,10 +55,10 @@ namespace {
 
 class TestComponent {
 private:
-  v_int32 m_port;
+  v_uint16 m_port;
 public:
 
-  TestComponent(v_int32 port)
+  TestComponent(v_uint16 port)
     : m_port(port)
   {}
 
@@ -74,7 +74,7 @@ public:
       OATPP_COMPONENT(std::shared_ptr<oatpp::network::virtual_::Interface>, interface);
       streamProvider = oatpp::network::virtual_::server::ConnectionProvider::createShared(interface);
     } else {
-      streamProvider = oatpp::network::server::SimpleTCPConnectionProvider::createShared(m_port);
+      streamProvider = oatpp::network::tcp::server::ConnectionProvider::createShared({"localhost", m_port});
     }
 
     OATPP_LOGD("oatpp::openssl::Config", "pem='%s'", CERT_PEM_PATH);
@@ -89,7 +89,7 @@ public:
     return oatpp::web::server::HttpRouter::createShared();
   }());
 
-  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::server::ConnectionHandler>, serverConnectionHandler)([] {
+  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([] {
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
     return oatpp::web::server::HttpConnectionHandler::createShared(router);
   }());
@@ -106,7 +106,7 @@ public:
       OATPP_COMPONENT(std::shared_ptr<oatpp::network::virtual_::Interface>, interface);
       streamProvider = oatpp::network::virtual_::client::ConnectionProvider::createShared(interface);
     } else {
-      streamProvider = oatpp::network::client::SimpleTCPConnectionProvider::createShared("127.0.0.1", m_port);
+      streamProvider = oatpp::network::tcp::client::ConnectionProvider::createShared({"localhost", m_port});
     }
 
     auto config = oatpp::openssl::Config::createDefaultClientConfigShared();
@@ -153,7 +153,7 @@ void FullTest::onRun() {
       { // test GET with path parameter
         auto response = client->getWithParams("my_test_param", connection);
         OATPP_ASSERT(response->getStatusCode() == 200);
-        auto dto = response->readBodyToDto<app::TestDto>(objectMapper.get());
+        auto dto = response->readBodyToDto<oatpp::Object<app::TestDto>>(objectMapper.get());
         OATPP_ASSERT(dto);
         OATPP_ASSERT(dto->testValue == "my_test_param");
       }
@@ -161,7 +161,7 @@ void FullTest::onRun() {
       { // test GET with query parameters
         auto response = client->getWithQueries("oatpp", 1, connection);
         OATPP_ASSERT(response->getStatusCode() == 200);
-        auto dto = response->readBodyToDto<app::TestDto>(objectMapper.get());
+        auto dto = response->readBodyToDto<oatpp::Object<app::TestDto>>(objectMapper.get());
         OATPP_ASSERT(dto);
         OATPP_ASSERT(dto->testValue == "name=oatpp&age=1");
       }
@@ -169,19 +169,19 @@ void FullTest::onRun() {
       { // test GET with query parameters
         auto response = client->getWithQueriesMap("value1", 32, 0.32, connection);
         OATPP_ASSERT(response->getStatusCode() == 200);
-        auto dto = response->readBodyToDto<app::TestDto>(objectMapper.get());
+        auto dto = response->readBodyToDto<oatpp::Object<app::TestDto>>(objectMapper.get());
         OATPP_ASSERT(dto);
         OATPP_ASSERT(dto->testMap);
-        OATPP_ASSERT(dto->testMap->count() == 3);
-        OATPP_ASSERT(dto->testMap->get("key1", "") == "value1");
-        OATPP_ASSERT(dto->testMap->get("key2", "") == "32");
-        OATPP_ASSERT(dto->testMap->get("key3", "") == oatpp::utils::conversion::float32ToStr(0.32));
+        OATPP_ASSERT(dto->testMap->size() == 3);
+        OATPP_ASSERT(dto->testMap.getValueByKey("key1", "") == "value1");
+        OATPP_ASSERT(dto->testMap.getValueByKey("key2", "") == "32");
+        OATPP_ASSERT(dto->testMap.getValueByKey("key3", "") == oatpp::utils::conversion::float32ToStr(0.32));
       }
 
       { // test GET with header parameter
         auto response = client->getWithHeaders("my_test_header", connection);
         OATPP_ASSERT(response->getStatusCode() == 200);
-        auto dto = response->readBodyToDto<app::TestDto>(objectMapper.get());
+        auto dto = response->readBodyToDto<oatpp::Object<app::TestDto>>(objectMapper.get());
         OATPP_ASSERT(dto);
         OATPP_ASSERT(dto->testValue == "my_test_header");
       }
@@ -189,7 +189,7 @@ void FullTest::onRun() {
       { // test POST with body
         auto response = client->postBody("my_test_body", connection);
         OATPP_ASSERT(response->getStatusCode() == 200);
-        auto dto = response->readBodyToDto<app::TestDto>(objectMapper.get());
+        auto dto = response->readBodyToDto<oatpp::Object<app::TestDto>>(objectMapper.get());
         OATPP_ASSERT(dto);
         OATPP_ASSERT(dto->testValue == "my_test_body");
       }

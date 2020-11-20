@@ -25,10 +25,10 @@
 #ifndef oatpp_openssl_Connection_hpp
 #define oatpp_openssl_Connection_hpp
 
-#include "TLSObject.hpp"
-
-#include "oatpp/core/base/memory/ObjectPool.hpp"
 #include "oatpp/core/data/stream/Stream.hpp"
+#include "oatpp/core/data/buffer/FIFOBuffer.hpp"
+
+#include <openssl/ssl.h>
 
 namespace oatpp { namespace openssl {
 
@@ -38,19 +38,13 @@ namespace oatpp { namespace openssl {
 class Connection : public oatpp::base::Countable, public oatpp::data::stream::IOStream {
 private:
 
-  class IOLockGuard {
-  private:
-    Connection* m_connection;
-    async::Action* m_checkAction;
-    bool m_locked;
-  public:
-
-    IOLockGuard(Connection* connection, async::Action* checkAction);
-    ~IOLockGuard();
-
-    bool unpackAndCheck();
-
-  };
+  static int createBio(BIO*);
+  static int destroyBio(BIO*);
+  static BIO_METHOD* createBioMethod();
+  static BIO_METHOD* getBioMethod();
+  static int BioWrite(BIO*, const char *, int);
+  static int BioRead(BIO*, char *, int);
+  static long BioCtrl(BIO*, int, long, void *);
 
 private:
 
@@ -72,35 +66,28 @@ private:
 
   };
 
-public:
-  typedef struct tls* TLSHandle;
 private:
-  TLSHandle m_tlsHandle;
-  std::shared_ptr<TLSObject> m_tlsObject;
+  SSL* m_ssl;
+  BIO* m_rbio;
+  BIO* m_wbio;
+private:
   std::shared_ptr<oatpp::data::stream::IOStream> m_stream;
+private:
   std::atomic<bool> m_initialized;
 private:
-  async::Action* m_ioAction;
-  concurrency::SpinLock m_ioLock;
-
-  void packIOAction(async::Action* action);
-  async::Action* unpackIOAction();
-
+  async::Action m_readAction;
+  async::Action m_writeAction;
 private:
   ConnectionContext* m_inContext;
   ConnectionContext* m_outContext;
-private:
-  static ssize_t writeCallback(struct tls *_ctx, const void *_buf, size_t _buflen, void *_cb_arg);
-  static ssize_t readCallback(struct tls *_ctx, void *_buf, size_t _buflen, void *_cb_arg);
 public:
 
   /**
    * Constructor.
-   * @param tlsObject - &id:oatpp::openssl::TLSObject;.
+   * @param ssl - pointer to OpenSSL ssl object;.
    * @param stream - underlying transport stream. &id:oatpp::data::stream::IOStream;.
    */
-  Connection(const std::shared_ptr<TLSObject>& tlsObject,
-             const std::shared_ptr<oatpp::data::stream::IOStream>& stream);
+  Connection(SSL* ssl, const std::shared_ptr<oatpp::data::stream::IOStream>& stream);
 
   /**
    * Virtual destructor.
@@ -167,14 +154,6 @@ public:
    * Close all handles.
    */
   void close();
-
-  /**
-   * Get TLS handle.
-   * @return - `tls*`.
-   */
-  TLSHandle getTlsHandle() {
-    return m_tlsHandle;
-  }
   
 };
   

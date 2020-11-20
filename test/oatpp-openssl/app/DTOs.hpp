@@ -32,12 +32,12 @@ namespace oatpp { namespace test { namespace openssl { namespace app {
 
 #include OATPP_CODEGEN_BEGIN(DTO)
 
-class TestDto : public oatpp::data::mapping::type::Object {
+class TestDto : public oatpp::DTO {
   
-  DTO_INIT(TestDto, Object)
+  DTO_INIT(TestDto, DTO)
   
   DTO_FIELD(String, testValue);
-  DTO_FIELD(Fields<String>::ObjectWrapper, testMap);
+  DTO_FIELD(Fields<String>, testMap);
   
 };
 
