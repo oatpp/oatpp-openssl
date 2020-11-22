@@ -13,7 +13,7 @@ jobs:
       clean: all
     steps:
       - script: |
-          apt-get install libssl-dev -y
+          sudo apt-get install libssl-dev -y
         displayName: 'Install - openssl'
       - script: |
           mkdir build
