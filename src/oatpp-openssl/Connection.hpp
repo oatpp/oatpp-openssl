@@ -151,9 +151,10 @@ public:
   oatpp::data::stream::Context& getInputStreamContext() override;
 
   /**
-   * Close all handles.
+   * Get the underlying transport stream.
+   * @return
    */
-  void close();
+  std::shared_ptr<data::stream::IOStream> getTransportStream();
   
 };
   

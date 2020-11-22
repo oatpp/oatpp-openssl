@@ -34,7 +34,6 @@ ConnectionProvider::ConnectionProvider(const std::shared_ptr<Config>& config,
                                        const std::shared_ptr<oatpp::network::ServerConnectionProvider>& streamProvider)
   : m_config(config)
   , m_streamProvider(streamProvider)
-  , m_closed(false)
 {
 
   setProperty(PROPERTY_HOST, streamProvider->getProperty(PROPERTY_HOST).toString());
@@ -61,7 +60,7 @@ std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::
 }
 
 ConnectionProvider::~ConnectionProvider() {
-  stop();
+  SSL_CTX_free(m_ctx);
 }
 
 void ConnectionProvider::instantiateTLSServer() {
@@ -79,10 +78,7 @@ void ConnectionProvider::instantiateTLSServer() {
 }
 
 void ConnectionProvider::stop() {
-  if(!m_closed) {
-    m_closed = true;
-    m_streamProvider->stop();
-  }
+  m_streamProvider->stop();
 }
 
 std::shared_ptr<data::stream::IOStream> ConnectionProvider::get(){
@@ -100,6 +96,26 @@ std::shared_ptr<data::stream::IOStream> ConnectionProvider::get(){
   }
 
   return nullptr;
+
+}
+
+void ConnectionProvider::invalidate(const std::shared_ptr<data::stream::IOStream>& connection) {
+
+  auto c = std::static_pointer_cast<oatpp::openssl::Connection>(connection);
+
+  /********************************************
+   * WARNING!!!
+   *
+   * c->closeTLS(); <--- DO NOT
+   *
+   * DO NOT CLOSE or DELETE TLS handles here.
+   * Remember - other threads can still be
+   * waiting for TLS events.
+   ********************************************/
+
+  /* Invalidate underlying transport */
+  auto s = c->getTransportStream();
+  m_streamProvider->invalidate(s);
 
 }
 

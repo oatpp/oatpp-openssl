@@ -40,7 +40,6 @@ class ConnectionProvider : public oatpp::base::Countable, public oatpp::network:
 private:
   std::shared_ptr<Config> m_config;
   std::shared_ptr<oatpp::network::ServerConnectionProvider> m_streamProvider;
-  bool m_closed;
 private:
   void instantiateTLSServer();
 private:
@@ -112,13 +111,10 @@ public:
   }
 
   /**
-   * Does nothing.
-   * @param connection
+   * Will call `invalidateConnection()` for the underlying transport stream.
+   * @param connection - **MUST** be an instance of &id:oatpp::openssl::Connection;.
    */
-  void invalidate(const std::shared_ptr<data::stream::IOStream>& connection) override {
-    (void)connection;
-    // DO Nothing.
-  }
+  void invalidate(const std::shared_ptr<data::stream::IOStream>& connection) override;
   
 };
   

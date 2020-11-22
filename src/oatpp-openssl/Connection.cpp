@@ -283,7 +283,7 @@ Connection::~Connection(){
     delete m_inContext;
     delete m_outContext;
   }
-  close();
+  SSL_free(m_ssl);
 }
 
 oatpp::v_io_size Connection::write(const void* buff, v_buff_size count, async::Action& action) {
@@ -355,8 +355,8 @@ oatpp::data::stream::Context& Connection::getInputStreamContext() {
   return *m_inContext;
 }
 
-void Connection::close(){
-
+std::shared_ptr<data::stream::IOStream> Connection::getTransportStream() {
+  return m_stream;
 }
   
 }}

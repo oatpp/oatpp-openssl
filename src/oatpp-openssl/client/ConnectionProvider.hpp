@@ -74,11 +74,14 @@ public:
                                                           const network::Address& address);
 
   /**
-   * Implements &id:oatpp::network::ConnectionProvider::stop;. Here does nothing.
+   * Virtual destructor.
    */
-  void stop() override {
-    // DO NOTHING
-  }
+  ~ConnectionProvider();
+
+  /**
+   * Close all handles.
+   */
+  void stop() override;
 
   /**
    * Get connection.
@@ -93,13 +96,10 @@ public:
   oatpp::async::CoroutineStarterForResult<const std::shared_ptr<data::stream::IOStream>&> getAsync() override;
 
   /**
-   * Does nothing.
-   * @param connection
+   * Will call `invalidateConnection()` for the underlying transport stream.
+   * @param connection - **MUST** be an instance of &id:oatpp::openssl::Connection;.
    */
-  void invalidate(const std::shared_ptr<data::stream::IOStream>& connection) override {
-    (void)connection;
-    // DO Nothing.
-  }
+  void invalidate(const std::shared_ptr<data::stream::IOStream>& connection) override;
 
 };
   
