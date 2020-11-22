@@ -42,8 +42,8 @@ ConnectionProvider::ConnectionProvider(const std::shared_ptr<Config>& config,
   setProperty(PROPERTY_HOST, streamProvider->getProperty(PROPERTY_HOST).toString());
   setProperty(PROPERTY_PORT, streamProvider->getProperty(PROPERTY_PORT).toString());
 
-  auto calback = CRYPTO_get_locking_callback();
-  if(!calback) {
+  auto callback = CRYPTO_get_locking_callback();
+  if(!callback) {
     OATPP_LOGD("[oatpp::openssl::client::ConnectionProvider::ConnectionProvider()]",
                "WARNING. openssl. CRYPTO_set_locking_callback is NOT set. "
                "This can cause problems using openssl in multithreaded environment! "
