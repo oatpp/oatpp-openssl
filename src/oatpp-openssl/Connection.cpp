@@ -24,6 +24,8 @@
 
 #include "Connection.hpp"
 
+//#include <openssl/err.h>
+
 namespace oatpp { namespace openssl {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +51,8 @@ void Connection::ConnectionContext::init() {
 
     do {
 
+      //ERR_clear_error();
+
       m_connection->m_readAction = async::Action::createActionByType(async::Action::TYPE_NONE);
       m_connection->m_writeAction = async::Action::createActionByType(async::Action::TYPE_NONE);
 
@@ -66,8 +70,10 @@ void Connection::ConnectionContext::init() {
         case SSL_ERROR_WANT_WRITE:
           break;
         default:
-          OATPP_LOGE("[oatpp::openssl::Connection::ConnectionContext::init()]", "Error. Handshake failed. err=%d", err);
-          throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::init()]: Error. Handshake failed.");
+          //std::string errStr = std::string(ERR_error_string(ERR_get_error(), nullptr));
+          //OATPP_LOGE("[oatpp::openssl::Connection::ConnectionContext::init()]", "Error. Handshake failed. code=%d, msg='%s'", err, errStr.c_str());
+          //throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::init()]: Error. Handshake failed. " + errStr);
+          return;
       }
 
     } while(res != 1);
