@@ -49,9 +49,17 @@ void Connection::ConnectionContext::init() {
 
     do {
 
-      res = SSL_do_handshake(m_connection->m_ssl);
-      int err = SSL_get_error(m_connection->m_ssl, res);
+      m_connection->m_readAction = async::Action::createActionByType(async::Action::TYPE_NONE);
+      m_connection->m_writeAction = async::Action::createActionByType(async::Action::TYPE_NONE);
 
+      res = SSL_do_handshake(m_connection->m_ssl);
+
+      if(!m_connection->m_readAction.isNone() || !m_connection->m_writeAction.isNone()) {
+        throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::init()]: "
+                                 "Error. The async::Action is unexpectedly returned in a Simple-API method.");
+      }
+
+      int err = SSL_get_error(m_connection->m_ssl, res);
       switch (err) {
         case SSL_ERROR_NONE:
         case SSL_ERROR_WANT_READ:
@@ -80,7 +88,40 @@ async::CoroutineStarter Connection::ConnectionContext::initAsync() {
     {}
 
     Action act() override {
-      return finish();
+      m_connection->m_initialized = true;
+      if (SSL_is_init_finished(m_connection->m_ssl)) {
+        return finish();
+      }
+      return yieldTo(&HandshakeCoroutine::doHandshake);
+    }
+
+    Action doHandshake() {
+
+      if(!m_connection->m_readAction.isNone()) return std::move(m_connection->m_readAction);
+      if(!m_connection->m_writeAction.isNone()) return std::move(m_connection->m_writeAction);
+
+      auto res = SSL_do_handshake(m_connection->m_ssl);
+
+      if(!m_connection->m_readAction.isNone()) return std::move(m_connection->m_readAction);
+      if(!m_connection->m_writeAction.isNone()) return std::move(m_connection->m_writeAction);
+
+      int err = SSL_get_error(m_connection->m_ssl, res);
+      switch (err) {
+        case SSL_ERROR_NONE:
+        case SSL_ERROR_WANT_READ:
+        case SSL_ERROR_WANT_WRITE:
+          break;
+        default:
+          OATPP_LOGE("[oatpp::openssl::Connection::ConnectionContext::initAsync()]", "Error. Handshake failed. err=%d", err);
+          throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::initAsync()]: Error. Handshake failed.");
+      }
+
+      if(res == 1) {
+        return finish();
+      }
+
+      return repeat();
+
     }
 
   };
@@ -138,7 +179,10 @@ BIO_METHOD* Connection::getBioMethod() {
 int Connection::BioWrite(BIO* bio, const char* data, int size) {
 
   auto _this = static_cast<Connection*>(BIO_get_data(bio));
-  _this->m_writeAction = async::Action::createActionByType(async::Action::TYPE_NONE);
+  if(!_this->m_writeAction.isNone()) {
+    BIO_set_retry_write(bio);
+    return -1;
+  }
   auto res = _this->m_stream->write(data, size, _this->m_writeAction);
 
   if(res > 0) {
@@ -146,12 +190,19 @@ int Connection::BioWrite(BIO* bio, const char* data, int size) {
   }
 
   switch(res) {
+
     case IOError::RETRY_READ: {
       BIO_set_retry_read(bio);
+      break;
     }
     case IOError::RETRY_WRITE: {
       BIO_set_retry_write(bio);
+      break;
     }
+
+    default:
+      BIO_clear_retry_flags(bio);
+
   }
 
   return -1;
@@ -160,7 +211,10 @@ int Connection::BioWrite(BIO* bio, const char* data, int size) {
 int Connection::BioRead(BIO* bio, char* data, int size) {
 
   auto _this = static_cast<Connection*>(BIO_get_data(bio));
-  _this->m_readAction = async::Action::createActionByType(async::Action::TYPE_NONE);
+  if(!_this->m_readAction.isNone()) {
+    BIO_set_retry_read(bio);
+    return -1;
+  }
   auto res = _this->m_stream->read(data, size, _this->m_readAction);
 
   if(res > 0) {
@@ -168,12 +222,19 @@ int Connection::BioRead(BIO* bio, char* data, int size) {
   }
 
   switch(res) {
+
     case IOError::RETRY_READ: {
       BIO_set_retry_read(bio);
+      break;
     }
     case IOError::RETRY_WRITE: {
       BIO_set_retry_write(bio);
+      break;
     }
+
+    default:
+      BIO_clear_retry_flags(bio);
+
   }
 
   return -1;
@@ -227,7 +288,11 @@ Connection::~Connection(){
 
 oatpp::v_io_size Connection::write(const void* buff, v_buff_size count, async::Action& action) {
 
+  m_writeAction = async::Action::createActionByType(async::Action::TYPE_NONE);
   auto res = SSL_write(m_ssl, buff, count);
+  if(!m_writeAction.isNone()) {
+    action = std::move(m_writeAction);
+  }
   if(res > 0) {
     return res;
   }
@@ -245,7 +310,11 @@ oatpp::v_io_size Connection::write(const void* buff, v_buff_size count, async::A
 
 oatpp::v_io_size Connection::read(void *buff, v_buff_size count, async::Action& action){
 
+  m_readAction = async::Action::createActionByType(async::Action::TYPE_NONE);
   auto res = SSL_read(m_ssl, buff, count);
+  if(!m_readAction.isNone()) {
+    action = std::move(m_readAction);
+  }
 
   if(res > 0) {
     return res;

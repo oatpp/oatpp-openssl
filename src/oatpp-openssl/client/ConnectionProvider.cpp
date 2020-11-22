@@ -100,8 +100,6 @@ std::shared_ptr<data::stream::IOStream> ConnectionProvider::get(){
   SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
   SSL_set_connect_state(ssl);
 
-  //SSL_set_verify(ssl, SSL_VERIFY_NONE, nullptr);
-
   auto sslConnection = std::make_shared<Connection>(ssl, transportStream);
 
   sslConnection->setOutputStreamIOMode(data::stream::IOMode::BLOCKING);
@@ -118,6 +116,7 @@ oatpp::async::CoroutineStarterForResult<const std::shared_ptr<data::stream::IOSt
 
   class ConnectCoroutine : public oatpp::async::CoroutineWithResult<ConnectCoroutine, const std::shared_ptr<oatpp::data::stream::IOStream>&> {
   private:
+    SSL_CTX* m_ctx;
     std::shared_ptr<Config> m_config;
     std::shared_ptr<oatpp::network::ClientConnectionProvider> m_streamProvider;
   private:
@@ -125,8 +124,9 @@ oatpp::async::CoroutineStarterForResult<const std::shared_ptr<data::stream::IOSt
     std::shared_ptr<Connection> m_connection;
   public:
 
-    ConnectCoroutine(const std::shared_ptr<Config>& config, const std::shared_ptr<oatpp::network::ClientConnectionProvider>& streamProvider)
-      : m_config(config)
+    ConnectCoroutine(SSL_CTX* ctx, const std::shared_ptr<Config>& config, const std::shared_ptr<oatpp::network::ClientConnectionProvider>& streamProvider)
+      : m_ctx(ctx)
+      , m_config(config)
       , m_streamProvider(streamProvider)
     {}
 
@@ -143,23 +143,22 @@ oatpp::async::CoroutineStarterForResult<const std::shared_ptr<data::stream::IOSt
 
     Action secureConnection() {
 
-//      Connection::TLSHandle tlsHandle = tls_client();
-//      tls_configure(tlsHandle, m_config->getTLSConfig());
-//
 //      oatpp::String host;
 //      auto hostName = m_streamProvider->getProperty(oatpp::network::ConnectionProvider::PROPERTY_HOST);
 //      if(hostName) {
 //        host = hostName.toString();
 //      }
-//
-//      auto tlsObject = std::make_shared<TLSObject>(tlsHandle, TLSObject::Type::CLIENT, host);
-//      m_connection = std::make_shared<Connection>(tlsObject, m_stream);
-//
-//      m_connection->setOutputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
-//      m_connection->setInputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
-//
-//      return m_connection->initContextsAsync().next(yieldTo(&ConnectCoroutine::onSuccess));
-      return _return(m_connection);
+
+      auto ssl = SSL_new(m_ctx);
+      SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
+      SSL_set_connect_state(ssl);
+
+      m_connection = std::make_shared<Connection>(ssl, m_stream);
+
+      m_connection->setOutputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
+      m_connection->setInputStreamIOMode(oatpp::data::stream::IOMode::ASYNCHRONOUS);
+
+      return m_connection->initContextsAsync().next(yieldTo(&ConnectCoroutine::onSuccess));
 
     }
 
@@ -170,8 +169,7 @@ oatpp::async::CoroutineStarterForResult<const std::shared_ptr<data::stream::IOSt
 
   };
 
-  return ConnectCoroutine::startForResult(m_config, m_streamProvider);
-
+  return ConnectCoroutine::startForResult(m_ctx, m_config, m_streamProvider);
 
 }
   
