@@ -1,4 +1,67 @@
-# oatpp-openssl
+# oatpp-openssl [![Build Status](https://dev.azure.com/lganzzzo/lganzzzo/_apis/build/status/oatpp.oatpp-openssl?branchName=master)](https://dev.azure.com/lganzzzo/lganzzzo/_build/latest?definitionId=32&branchName=master)
 
- WIP - NOT READY TO USE !!!
+This submodule provides secure server and client connection providers for oatpp applications. Based on OpenSSL.
+
+More about oat++:
+- Website: [https://oatpp.io](https://oatpp.io)
+
+## Requires
+
+OpenSSL installed.
+
+### Create server connection provider
+
+```cpp
+
+#include "oatpp-openssl/server/ConnectionProvider.hpp"
+#include "oatpp-openssl/Config.hpp"
+
+...
+
+const char* pemFile = "path/to/file.pem";
+const char* crtFile = "path/to/file.crt";
+
+auto config = oatpp::openssl::Config::createDefaultServerConfig(pemFile, crtFile);
+auto connectionProvider = oatpp::openssl::server::ConnectionProvider::createShared(config, {"localhost", 8443});
+
+```
+
+### Create client connection provider
+
+```cpp
+
+#include "oatpp-openssl/client/ConnectionProvider.hpp"
+#include "oatpp-openssl/Config.hpp"
+
+...
+
+auto config = oatpp::openssl::Config::createShared();
+auto connectionProvider = oatpp::openssl::client::ConnectionProvider::createShared(config, {"httpbin.org", 443});
+
+```
+
+## Don't forget!
+
+Set openssl lockingCallback and SIGPIPE handler on program start!
+
+```cpp
+
+#include "oatpp-openssl/Callbacks.hpp"
+
+...
+
+/* set lockingCallback for openssl */
+oatpp::openssl::Callbacks::setDefaultCallbacks();
+
+```
+
+```c++
+#include <csignal>
+
+...
+
+/* ignore SIGPIPE */
+std::signal(SIGPIPE, SIG_IGN);
+```
+
  
