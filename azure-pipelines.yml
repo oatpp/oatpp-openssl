@@ -9,15 +9,12 @@ jobs:
     continueOnError: false
     pool:
       vmImage: 'Ubuntu 16.04'
-    container:
-      image: lganzzzo/ubuntu-cmake:latest
     workspace:
       clean: all
     steps:
       - script: |
-          sudo ./install-openssl.sh
-        workingDirectory: utility/install-deps
-        displayName: 'build OpenSSL'
+          apt-get install libssl-dev -y
+        displayName: 'Install - openssl'
       - script: |
           mkdir build
       - script: |
