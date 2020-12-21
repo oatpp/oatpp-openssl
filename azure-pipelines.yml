@@ -24,7 +24,40 @@ jobs:
         workingDirectory: build
       - script: |
           cmake -DOATPP_BUILD_TESTS=OFF ..
-          sudo make install
+          sudo make install -j 2
+        displayName: 'Build - oatpp'
+        workingDirectory: build/oatpp/build
+      - script: |
+          cmake ..
+          make
+        displayName: 'Build - module'
+        workingDirectory: build
+      - script: |
+          make test ARGS="-V"
+        displayName: 'Test'
+        workingDirectory: build
+
+  - job: macOS
+    displayName: 'Build - macOS'
+    continueOnError: false
+    pool:
+      vmImage: 'macOS-10.14'
+    workspace:
+      clean: all
+    steps:
+      - script: |
+          brew install openssl
+          displayName: 'Install - openssl'
+      - script: |
+          mkdir build
+      - script: |
+          git clone https://github.com/oatpp/oatpp
+          mkdir -p oatpp/build
+        displayName: 'Checkout - oatpp'
+        workingDirectory: build
+      - script: |
+          cmake -DOATPP_BUILD_TESTS=OFF ..
+          sudo make install -j 2
         displayName: 'Build - oatpp'
         workingDirectory: build/oatpp/build
       - script: |
