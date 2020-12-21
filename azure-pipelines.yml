@@ -83,10 +83,9 @@ jobs:
           curl -o build/nasm.zip https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/win64/nasm-2.14.02-win64.zip
       - task: ExtractFiles@1
         inputs:
-          archiveFilePatterns: 'nasm.zip'
+          archiveFilePatterns: 'build/*.zip'
           cleanDestinationFolder: false
           overwriteExistingFiles: true
-        workingDirectory: build
       - script: |
           git clone -b "OpenSSL_1_1_1-stable" https://github.com/openssl/openssl.git
         displayName: 'Checkout - OpenSSL'
