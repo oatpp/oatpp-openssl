@@ -80,14 +80,15 @@ jobs:
     steps:
       - script: |
           MD build
-          curl -o build/nasm.zip https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/win64/nasm-2.14.02-win64.zip
-      - task: ExtractFiles@1
-        inputs:
-          archiveFilePatterns: 'build/*.zip'
-          cleanDestinationFolder: false
-          overwriteExistingFiles: true
+          curl -o build/nasm_pkg.exe https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/win64/nasm-2.15.05-installer-x64.exe
+          build/nasm_pkg.exe
+#      - task: ExtractFiles@1
+#        inputs:
+#          archiveFilePatterns: 'build/*.zip'
+#          cleanDestinationFolder: false
+#          overwriteExistingFiles: true
       - script: |
-          git clone -b "OpenSSL_1_1_1-stable" https://github.com/openssl/openssl.git
+          git clone -b "OpenSSL_1_1_1-stable" https://github.com/openssl/openssl.git --depth 1
         displayName: 'Checkout - OpenSSL'
         workingDirectory: build
       - script: |
