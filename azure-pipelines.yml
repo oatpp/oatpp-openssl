@@ -81,7 +81,11 @@ jobs:
       - script: |
           MD build
           curl -o build/nasm_pkg.exe https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/win64/nasm-2.15.05-installer-x64.exe
-          build/nasm_pkg.exe
+
+      - script: |
+          nasm_pkg.exe
+        displayName: 'nasm_pkg'
+        workingDirectory: build
 #      - task: ExtractFiles@1
 #        inputs:
 #          archiveFilePatterns: 'build/*.zip'
