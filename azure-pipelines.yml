@@ -47,7 +47,7 @@ jobs:
     steps:
       - script: |
           brew install openssl
-          displayName: 'Install - openssl'
+        displayName: 'Install - openssl'
       - script: |
           mkdir build
       - script: |
