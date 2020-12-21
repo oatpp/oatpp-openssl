@@ -94,10 +94,10 @@ jobs:
           $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path
           $newpath = "$BUILD_SOURCESDIRECTORY\build\nasm;$oldpath"
           Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newpath
-          Write-Host $newpath
-          SET PATH=$newpath
+          PATH=$newpath
+          echo $PATH
       - pwsh: |
-          Write-Host $PATH
+          echo $PATH
           perl Configure VC-WIN64A
           nmake
           nmake install
