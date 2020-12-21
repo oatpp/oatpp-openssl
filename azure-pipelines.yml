@@ -80,29 +80,18 @@ jobs:
     steps:
       - script: |
           MD build
-          curl -o build/nasm.zip https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/win64/nasm-2.15.05-win64.zip
-      - task: ExtractFiles@1
-        inputs:
-          archiveFilePatterns: 'build/*.zip'
-          cleanDestinationFolder: false
-          overwriteExistingFiles: true
       - script: |
-          git clone -b "OpenSSL_1_1_1-stable" https://github.com/openssl/openssl.git --depth 1
-        displayName: 'Checkout - OpenSSL'
+          git clone https://github.com/microsoft/vcpkg.git --depth 1
+        displayName: 'Get vcpkg'
         workingDirectory: build
-      - pwsh: |
-          $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path
-          $newpath = "$BUILD_SOURCESDIRECTORY\build\nasm;$oldpath"
-          Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newpath
-          SET PATH=$newpath
-          echo $PATH
-      - pwsh: |
-          echo $PATH
-          perl Configure VC-WIN64A
-          nmake
-          nmake install
-        displayName: 'Install - openssl'
-        workingDirectory: build\openssl
+      - script: |
+          .\bootstrap-vcpkg.bat
+        displayName: Bootstrap vcpkg
+        workingDirectory: build\vcpkg
+      - script: |
+          .\vcpkg.exe install openssl
+        displayName: Bootstrap vcpkg
+        workingDirectory: build\vcpkg
       - script: |
           git clone https://github.com/oatpp/oatpp
           MD oatpp\build
