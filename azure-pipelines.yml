@@ -90,8 +90,11 @@ jobs:
           git clone -b "OpenSSL_1_1_1-stable" https://github.com/openssl/openssl.git --depth 1
         displayName: 'Checkout - OpenSSL'
         workingDirectory: build
+      - pwsh: |
+          $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path
+          $newpath = "$BUILD_SOURCESDIRECTORY\build\nasm;$oldpath"
+          Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newpath
       - script: |
-          PATH=$BUILD_SOURCESDIRECTORY\build\nasm;$PATH
           perl Configure VC-WIN64A
           nmake
           nmake install
