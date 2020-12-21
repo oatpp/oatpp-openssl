@@ -91,7 +91,7 @@ jobs:
         displayName: 'Checkout - OpenSSL'
         workingDirectory: build
       - script: |
-          PATH=$BUILD_SOURCESDIRECTORY/build/nasm:$PATH
+          PATH=$BUILD_SOURCESDIRECTORY\build\nasm;$PATH
           perl Configure VC-WIN64A
           nmake
           nmake install
