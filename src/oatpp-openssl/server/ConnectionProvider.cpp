@@ -81,7 +81,7 @@ void ConnectionProvider::instantiateTLSServer() {
     throw std::runtime_error("[oatpp::openssl::server::ConnectionProvider::instantiateTLSServer()]. Error. Can't create context.");
   }
 
-  SSL_CTX_set_ecdh_auto(m_ctx, 1);
+  //SSL_CTX_set_ecdh_auto(m_ctx, 1);
   m_config->configureContext(m_ctx);
 
 }
