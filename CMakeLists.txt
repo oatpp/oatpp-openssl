@@ -95,7 +95,7 @@ message("## ${OATPP_THIS_MODULE_NAME} module. Resolving dependencies...\n")
 ##############################
 ## Find Openssl dependency
 
-find_package(OpenSSL REQUIRED)
+find_package(OpenSSL 1.1 REQUIRED)
 
 message("OPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR}")
 message("OPENSSL_LIBRARIES=${OPENSSL_LIBRARIES}")

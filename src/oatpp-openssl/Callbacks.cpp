@@ -33,7 +33,7 @@ namespace oatpp { namespace openssl {
 oatpp::concurrency::SpinLock* Callbacks::LOCKS = Callbacks::createLocks();
   
 void Callbacks::setDefaultCallbacks() {
-  CRYPTO_set_locking_callback(Callbacks::lockingCallback);
+  //CRYPTO_set_locking_callback(Callbacks::lockingCallback);
 }
   
 oatpp::concurrency::SpinLock* Callbacks::createLocks() {
@@ -49,7 +49,8 @@ void Callbacks::lockingCallback(int mode, int n, const char* file, int line) {
 }
 
 void init() {
-  SSL_load_error_strings();
+  //SSL_load_error_strings();
+  OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS| OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL);
   OpenSSL_add_ssl_algorithms();
 }
   
