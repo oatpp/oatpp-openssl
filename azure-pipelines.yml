@@ -37,35 +37,70 @@ jobs:
         displayName: 'Test'
         workingDirectory: build
 
-  - job: macOS
-    displayName: 'Build - macOS'
+#  - job: macOS
+#    displayName: 'Build - macOS'
+#    continueOnError: false
+#    pool:
+#      vmImage: 'macOS-10.14'
+#    workspace:
+#      clean: all
+#    steps:
+#      - script: |
+#          brew install openssl
+#        displayName: 'Install - openssl'
+#      - script: |
+#          mkdir build
+#      - script: |
+#          git clone https://github.com/oatpp/oatpp
+#          mkdir -p oatpp/build
+#        displayName: 'Checkout - oatpp'
+#        workingDirectory: build
+#      - script: |
+#          cmake -DOATPP_BUILD_TESTS=OFF ..
+#          sudo make install -j 2
+#        displayName: 'Build - oatpp'
+#        workingDirectory: build/oatpp/build
+#      - script: |
+#          cmake ..
+#          make
+#        displayName: 'Build - module'
+#        workingDirectory: build
+#      - script: |
+#          make test ARGS="-V"
+#        displayName: 'Test'
+#        workingDirectory: build
+
+  - job: windows
+    displayName: 'Build - Windows'
     continueOnError: false
     pool:
-      vmImage: 'macOS-10.14'
+      vmImage: 'windows-latest'
     workspace:
       clean: all
     steps:
       - script: |
-          brew install openssl
+          perl Configure
+          nmake
+          nmake install
         displayName: 'Install - openssl'
       - script: |
-          mkdir build
+          MD build
       - script: |
           git clone https://github.com/oatpp/oatpp
-          mkdir -p oatpp/build
+          MD oatpp\build
         displayName: 'Checkout - oatpp'
         workingDirectory: build
       - script: |
           cmake -DOATPP_BUILD_TESTS=OFF ..
-          sudo make install -j 2
+          cmake --build . --target INSTALL
         displayName: 'Build - oatpp'
-        workingDirectory: build/oatpp/build
+        workingDirectory: build\oatpp\build
       - script: |
           cmake ..
-          make
-        displayName: 'Build - module'
+          cmake --build .
+        displayName: 'Build Module'
         workingDirectory: build
       - script: |
-          make test ARGS="-V"
+          module-tests.exe
         displayName: 'Test'
-        workingDirectory: build
+        workingDirectory: build\test\Debug\
