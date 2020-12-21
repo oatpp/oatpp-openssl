@@ -4,38 +4,38 @@
 # https://aka.ms/yaml
 
 jobs:
-  - job: ubuntu_16_04
-    displayName: 'Build - Ubuntu 16.04'
-    continueOnError: false
-    pool:
-      vmImage: 'Ubuntu 16.04'
-    workspace:
-      clean: all
-    steps:
-      - script: |
-          sudo apt-get install libssl-dev -y
-        displayName: 'Install - openssl'
-      - script: |
-          mkdir build
-      - script: |
-          git clone https://github.com/oatpp/oatpp
-          mkdir -p oatpp/build
-        displayName: 'Checkout - oatpp'
-        workingDirectory: build
-      - script: |
-          cmake -DOATPP_BUILD_TESTS=OFF ..
-          sudo make install -j 2
-        displayName: 'Build - oatpp'
-        workingDirectory: build/oatpp/build
-      - script: |
-          cmake ..
-          make
-        displayName: 'Build - module'
-        workingDirectory: build
-      - script: |
-          make test ARGS="-V"
-        displayName: 'Test'
-        workingDirectory: build
+#  - job: ubuntu_16_04
+#    displayName: 'Build - Ubuntu 16.04'
+#    continueOnError: false
+#    pool:
+#      vmImage: 'Ubuntu 16.04'
+#    workspace:
+#      clean: all
+#    steps:
+#      - script: |
+#          sudo apt-get install libssl-dev -y
+#        displayName: 'Install - openssl'
+#      - script: |
+#          mkdir build
+#      - script: |
+#          git clone https://github.com/oatpp/oatpp
+#          mkdir -p oatpp/build
+#        displayName: 'Checkout - oatpp'
+#        workingDirectory: build
+#      - script: |
+#          cmake -DOATPP_BUILD_TESTS=OFF ..
+#          sudo make install -j 2
+#        displayName: 'Build - oatpp'
+#        workingDirectory: build/oatpp/build
+#      - script: |
+#          cmake ..
+#          make
+#        displayName: 'Build - module'
+#        workingDirectory: build
+#      - script: |
+#          make test ARGS="-V"
+#        displayName: 'Test'
+#        workingDirectory: build
 
 #  - job: macOS
 #    displayName: 'Build - macOS'
@@ -80,12 +80,19 @@ jobs:
     steps:
       - script: |
           MD build
+          curl -o build/nasm.zip https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/win64/nasm-2.14.02-win64.zip
+      - task: ExtractFiles@1
+        inputs:
+          archiveFilePatterns: 'nasm.zip'
+          cleanDestinationFolder: false
+          overwriteExistingFiles: true
+        workingDirectory: build
       - script: |
           git clone -b "OpenSSL_1_1_1-stable" https://github.com/openssl/openssl.git
         displayName: 'Checkout - OpenSSL'
         workingDirectory: build
       - script: |
-          perl Configure
+          perl Configure VC-WIN64A
           nmake
           nmake install
         displayName: 'Install - openssl'
