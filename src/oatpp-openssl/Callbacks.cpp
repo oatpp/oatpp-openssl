@@ -30,28 +30,29 @@
 
 namespace oatpp { namespace openssl {
 
-oatpp::concurrency::SpinLock* Callbacks::LOCKS = Callbacks::createLocks();
+//oatpp::concurrency::SpinLock* Callbacks::LOCKS = Callbacks::createLocks();
   
 void Callbacks::setDefaultCallbacks() {
   //CRYPTO_set_locking_callback(Callbacks::lockingCallback);
 }
   
-oatpp::concurrency::SpinLock* Callbacks::createLocks() {
-  return new oatpp::concurrency::SpinLock[CRYPTO_num_locks()];
-}
+//oatpp::concurrency::SpinLock* Callbacks::createLocks() {
+//  return new oatpp::concurrency::SpinLock[CRYPTO_num_locks()];
+//}
   
 void Callbacks::lockingCallback(int mode, int n, const char* file, int line) {
-  if (mode & CRYPTO_LOCK) {
-    LOCKS[n].lock();
-  } else {
-    LOCKS[n].unlock();
-  }
+//  if (mode & CRYPTO_LOCK) {
+//    LOCKS[n].lock();
+//  } else {
+//    LOCKS[n].unlock();
+//  }
 }
 
 void init() {
   //SSL_load_error_strings();
   OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS| OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL);
-  OpenSSL_add_ssl_algorithms();
+  //OpenSSL_add_ssl_algorithms();
+  SSL_library_init();
 }
   
 }}

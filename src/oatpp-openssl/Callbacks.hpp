@@ -38,12 +38,12 @@ private:
   /*
    * Atomics for lockingCallback;
    */
-  static oatpp::concurrency::SpinLock* LOCKS;
+  //static oatpp::concurrency::SpinLock* LOCKS;
 private:
   /*
    * Init atomics for lockingCallback;
    */
-  static oatpp::concurrency::SpinLock* createLocks();
+  //static oatpp::concurrency::SpinLock* createLocks();
 public:
   
   /**
