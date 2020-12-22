@@ -115,8 +115,7 @@ jobs:
         displayName: 'Build - oatpp'
         workingDirectory: build\oatpp\build
       - script: |
-          set OPENSSL_ROOT_DIR="$BUILD_SOURCESDIRECTORY/build/vcpkg/installed/x86-windows"
-          cmake -DCMAKE_TOOLCHAIN_FILE=.\vcpkg\scripts\buildsystems\vcpkg.cmake ..
+          cmake -DOPENSSL_ROOT_DIR="$BUILD_SOURCESDIRECTORY/build/vcpkg/installed/x86-windows" ..
           cmake --build .
         displayName: 'Build Module'
         workingDirectory: build
