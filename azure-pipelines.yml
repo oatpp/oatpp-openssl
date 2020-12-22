@@ -115,7 +115,7 @@ jobs:
         displayName: 'Build - oatpp'
         workingDirectory: build\oatpp\build
       - script: |
-          cmake -DOPENSSL_ROOT_DIR="./vcpkg/installed/x64-windows-static" ..
+          cmake -DOPENSSL_ROOT_DIR="./vcpkg/installed/x86-windows" ..
           cmake --build .
         displayName: 'Build Module'
         workingDirectory: build
