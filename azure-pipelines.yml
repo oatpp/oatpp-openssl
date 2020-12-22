@@ -91,19 +91,19 @@ jobs:
     steps:
       - script: |
           MD build
-#      - script: |
-#          git clone https://github.com/microsoft/vcpkg.git --depth 1
-#        displayName: 'Get vcpkg'
-#        workingDirectory: build
-#      - script: |
-#          .\bootstrap-vcpkg.bat
-#        displayName: Bootstrap vcpkg
-#        workingDirectory: build\vcpkg
-#      - script: |
-#          .\vcpkg.exe install openssl
-#          .\vcpkg.exe list
-#        displayName: Install OpenSSL
-#        workingDirectory: build\vcpkg
+      - script: |
+          git clone https://github.com/microsoft/vcpkg.git --depth 1
+        displayName: 'Get vcpkg'
+        workingDirectory: build
+      - script: |
+          .\bootstrap-vcpkg.bat
+        displayName: Bootstrap vcpkg
+        workingDirectory: build\vcpkg
+      - script: |
+          .\vcpkg.exe install openssl --vcpkg-root ./
+          .\vcpkg.exe list
+        displayName: Install OpenSSL
+        workingDirectory: build\vcpkg
       - script: |
           git clone https://github.com/oatpp/oatpp
           MD oatpp\build
@@ -115,8 +115,7 @@ jobs:
         displayName: 'Build - oatpp'
         workingDirectory: build\oatpp\build
       - script: |
-          OPENSSL_ROOT_DIR=
-          cmake -DOPENSSL_ROOT_DIR="" ..
+          cmake -DCMAKE_TOOLCHAIN_FILE=.\vcpkg\scripts\buildsystems\vcpkg.cmake ..
           cmake --build .
         displayName: 'Build Module'
         workingDirectory: build
