@@ -101,6 +101,7 @@ jobs:
         workingDirectory: build\vcpkg
       - script: |
           .\vcpkg.exe install openssl
+          .\vcpkg.exe list
         displayName: Install OpenSSL
         workingDirectory: build\vcpkg
       - script: |
@@ -114,7 +115,7 @@ jobs:
         displayName: 'Build - oatpp'
         workingDirectory: build\oatpp\build
       - script: |
-          cmake -DCMAKE_TOOLCHAIN_FILE=.\vcpkg\scripts\buildsystems\vcpkg.cmake ..
+          cmake -DOPENSSL_ROOT_DIR="./vcpkg/installed/x64-windows-static" ..
           cmake --build .
         displayName: 'Build Module'
         workingDirectory: build
