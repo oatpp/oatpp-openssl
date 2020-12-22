@@ -116,7 +116,7 @@ jobs:
         workingDirectory: build\oatpp\build
       - script: |
           OPENSSL_ROOT_DIR=
-          cmake ..
+          cmake -DOPENSSL_ROOT_DIR="" ..
           cmake --build .
         displayName: 'Build Module'
         workingDirectory: build
