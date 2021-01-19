@@ -1,7 +1,5 @@
 
 add_library(${OATPP_THIS_MODULE_NAME}
-        oatpp-openssl/Callbacks.cpp
-        oatpp-openssl/Callbacks.hpp
         oatpp-openssl/Config.cpp
         oatpp-openssl/Config.hpp
         oatpp-openssl/Connection.cpp
