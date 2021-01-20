@@ -39,29 +39,3 @@ auto config = oatpp::openssl::Config::createShared();
 auto connectionProvider = oatpp::openssl::client::ConnectionProvider::createShared(config, {"httpbin.org", 443});
 
 ```
-
-## Don't forget!
-
-Set openssl lockingCallback and SIGPIPE handler on program start!
-
-```cpp
-
-#include "oatpp-openssl/Callbacks.hpp"
-
-...
-
-/* set lockingCallback for openssl */
-oatpp::openssl::Callbacks::setDefaultCallbacks();
-
-```
-
-```c++
-#include <csignal>
-
-...
-
-/* ignore SIGPIPE */
-std::signal(SIGPIPE, SIG_IGN);
-```
-
- 
