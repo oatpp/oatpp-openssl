@@ -1,13 +1,8 @@
 
-#include "oatpp-test/UnitTest.hpp"
-
 #include "FullTest.hpp"
 #include "FullAsyncTest.hpp"
 #include "FullAsyncClientTest.hpp"
 
-#include "oatpp-openssl/Callbacks.hpp"
-
-#include "oatpp/core/concurrency/SpinLock.hpp"
 #include "oatpp/core/base/Environment.hpp"
 
 #include <iostream>
@@ -16,11 +11,6 @@
 namespace {
 
 void runTests() {
-
-  oatpp::openssl::init();
-
-  /* set lockingCallback for openssl */
-  oatpp::openssl::Callbacks::setDefaultCallbacks();
 
   /* ignore SIGPIPE */
   std::signal(SIGPIPE, SIG_IGN);

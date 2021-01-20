@@ -39,15 +39,6 @@ ConnectionProvider::ConnectionProvider(const std::shared_ptr<Config>& config,
   setProperty(PROPERTY_HOST, streamProvider->getProperty(PROPERTY_HOST).toString());
   setProperty(PROPERTY_PORT, streamProvider->getProperty(PROPERTY_PORT).toString());
 
-  auto callback = CRYPTO_get_locking_callback();
-  if(!callback) {
-    OATPP_LOGD("[oatpp::openssl::server::ConnectionProvider::ConnectionProvider()]",
-               "WARNING. openssl. CRYPTO_set_locking_callback is NOT set. "
-               "This can cause problems using openssl in multithreaded environment! "
-               "Please call oatpp::openssl::Callbacks::setDefaultCallbacks() or "
-               "consider setting custom locking_callback.");
-  }
-
   instantiateTLSServer();
 
 }
@@ -81,7 +72,6 @@ void ConnectionProvider::instantiateTLSServer() {
     throw std::runtime_error("[oatpp::openssl::server::ConnectionProvider::instantiateTLSServer()]. Error. Can't create context.");
   }
 
-  SSL_CTX_set_ecdh_auto(m_ctx, 1);
   m_config->configureContext(m_ctx);
 
 }
