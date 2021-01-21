@@ -83,11 +83,11 @@ std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::
   
 std::shared_ptr<data::stream::IOStream> ConnectionProvider::get(){
 
-//  oatpp::String host;
-//  auto hostName = m_streamProvider->getProperty(oatpp::network::ConnectionProvider::PROPERTY_HOST);
-//  if(hostName) {
-//    host = hostName.toString();
-//  }
+  oatpp::String host;
+  auto hostName = m_streamProvider->getProperty(oatpp::network::ConnectionProvider::PROPERTY_HOST);
+  if(hostName) {
+    host = hostName.toString();
+  }
 
   auto transportStream = m_streamProvider->get();
 
@@ -98,6 +98,7 @@ std::shared_ptr<data::stream::IOStream> ConnectionProvider::get(){
   auto ssl = SSL_new(m_ctx);
   SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
   SSL_set_connect_state(ssl);
+  SSL_set_tlsext_host_name(ssl, host->c_str());
 
   auto sslConnection = std::make_shared<Connection>(ssl, transportStream);
 
@@ -142,15 +143,16 @@ oatpp::async::CoroutineStarterForResult<const std::shared_ptr<data::stream::IOSt
 
     Action secureConnection() {
 
-//      oatpp::String host;
-//      auto hostName = m_streamProvider->getProperty(oatpp::network::ConnectionProvider::PROPERTY_HOST);
-//      if(hostName) {
-//        host = hostName.toString();
-//      }
+      oatpp::String host;
+      auto hostName = m_streamProvider->getProperty(oatpp::network::ConnectionProvider::PROPERTY_HOST);
+      if(hostName) {
+        host = hostName.toString();
+      }
 
       auto ssl = SSL_new(m_ctx);
       SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
       SSL_set_connect_state(ssl);
+      SSL_set_tlsext_host_name(ssl, host->c_str());
 
       m_connection = std::make_shared<Connection>(ssl, m_stream);
 
