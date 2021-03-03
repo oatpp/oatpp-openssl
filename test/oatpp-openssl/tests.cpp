@@ -13,7 +13,9 @@ namespace {
 void runTests() {
 
   /* ignore SIGPIPE */
-  std::signal(SIGPIPE, SIG_IGN);
+  #if !(defined(WIN32) || defined(_WIN32))
+    std::signal(SIGPIPE, SIG_IGN);
+  #endif
 
   {
 
