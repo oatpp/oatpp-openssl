@@ -42,8 +42,6 @@ private:
   std::shared_ptr<oatpp::network::ServerConnectionProvider> m_streamProvider;
 private:
   void instantiateTLSServer();
-private:
-  SSL_CTX* m_ctx;
 public:
   /**
    * Constructor.
@@ -115,7 +113,13 @@ public:
    * @param connection - **MUST** be an instance of &id:oatpp::openssl::Connection;.
    */
   void invalidate(const std::shared_ptr<data::stream::IOStream>& connection) override;
-  
+
+  /**
+   * Will update the internal config and handle all new connections with it.
+   * @param config - &id:oatpp::openssl::Config;.
+   */
+  void updateConfig(const std::shared_ptr<Config>& config);
+
 };
   
 }}}

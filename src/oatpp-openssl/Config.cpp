@@ -63,10 +63,15 @@ void Config::addContextConfigurer(const std::shared_ptr<configurer::ContextConfi
   m_contextConfigs.push_back(contextConfigurer);
 }
 
-void Config::configureContext(SSL_CTX* ctx) const {
+void Config::configureContext(const std::shared_ptr<SSL_CTX> &ctx) {
+  m_ctx = ctx;
   for(auto& c : m_contextConfigs) {
-    c->configure(ctx);
+    c->configure(ctx.get());
   }
 }
-  
+
+const std::shared_ptr<SSL_CTX> &Config::getCtx() const {
+  return m_ctx;
+}
+
 }}

@@ -34,6 +34,7 @@ namespace oatpp { namespace openssl {
 class Config {
 private:
   std::list<std::shared_ptr<configurer::ContextConfigurer>> m_contextConfigs;
+  std::shared_ptr<SSL_CTX> m_ctx;
 public:
 
   Config();
@@ -51,7 +52,8 @@ public:
   void clearContextConfigurers();
   void addContextConfigurer(const std::shared_ptr<configurer::ContextConfigurer>& contextConfigurer);
 
-  void configureContext(SSL_CTX* ctx) const;
+  void configureContext(const std::shared_ptr<SSL_CTX> &ctx);
+  const std::shared_ptr<SSL_CTX> &getCtx() const;
 
 };
   

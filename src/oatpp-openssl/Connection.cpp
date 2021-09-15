@@ -247,13 +247,17 @@ int Connection::BioRead(BIO* bio, char* data, int size) {
 
 }
 
-Connection::Connection(SSL* ssl, const std::shared_ptr<oatpp::data::stream::IOStream>& stream)
-  : m_ssl(ssl)
+Connection::Connection(const std::shared_ptr<Config> &config, const std::shared_ptr<oatpp::data::stream::IOStream>& stream)
+  : m_config(config)
   , m_rbio(BIO_new(getBioMethod()))
   , m_wbio(BIO_new(getBioMethod()))
   , m_stream(stream)
   , m_initialized(false)
 {
+
+  m_ssl = SSL_new(m_config->getCtx().get());
+  SSL_set_mode(m_ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
+  SSL_set_accept_state(m_ssl);
 
   BIO_set_data(m_rbio, this);
   BIO_set_data(m_wbio, this);

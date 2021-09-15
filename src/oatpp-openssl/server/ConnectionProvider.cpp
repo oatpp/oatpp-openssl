@@ -28,6 +28,8 @@
 
 #include "oatpp/network/tcp/server/ConnectionProvider.hpp"
 
+#include <memory>
+
 namespace oatpp { namespace openssl { namespace server {
 
 ConnectionProvider::ConnectionProvider(const std::shared_ptr<Config>& config,
@@ -46,7 +48,7 @@ ConnectionProvider::ConnectionProvider(const std::shared_ptr<Config>& config,
 std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::shared_ptr<Config>& config,
                                                                      const std::shared_ptr<oatpp::network::ServerConnectionProvider>& streamProvider)
 {
-  return std::shared_ptr<ConnectionProvider>(new ConnectionProvider(config, streamProvider));
+  return std::make_shared<ConnectionProvider>(config, streamProvider);
 }
 
 std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::shared_ptr<Config>& config,
@@ -60,19 +62,24 @@ std::shared_ptr<ConnectionProvider> ConnectionProvider::createShared(const std::
 }
 
 ConnectionProvider::~ConnectionProvider() {
-  SSL_CTX_free(m_ctx);
 }
 
 void ConnectionProvider::instantiateTLSServer() {
 
+  struct ssl_ctx_deleter {
+    void operator()(struct ssl_ctx_st * p){
+      SSL_CTX_free(p);
+    }
+  };
+
   auto method = SSLv23_server_method();
 
-  m_ctx = SSL_CTX_new(method);
-  if (!m_ctx) {
+  auto ctx = std::shared_ptr<SSL_CTX>(SSL_CTX_new(method), ssl_ctx_deleter());
+  if (!ctx) {
     throw std::runtime_error("[oatpp::openssl::server::ConnectionProvider::instantiateTLSServer()]. Error. Can't create context.");
   }
 
-  m_config->configureContext(m_ctx);
+  m_config->configureContext(ctx);
 
 }
 
@@ -85,13 +92,7 @@ std::shared_ptr<data::stream::IOStream> ConnectionProvider::get(){
   auto transportStream = m_streamProvider->get();
 
   if(transportStream) {
-
-    auto ssl = SSL_new(m_ctx);
-    SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
-    SSL_set_accept_state(ssl);
-
-    return std::make_shared<Connection>(ssl, transportStream);
-
+    return std::make_shared<Connection>(m_config, transportStream);
   }
 
   return nullptr;
@@ -116,6 +117,11 @@ void ConnectionProvider::invalidate(const std::shared_ptr<data::stream::IOStream
   auto s = c->getTransportStream();
   m_streamProvider->invalidate(s);
 
+}
+
+void ConnectionProvider::updateConfig(const std::shared_ptr<Config> &config) {
+  m_config = config;
+  instantiateTLSServer();
 }
 
 }}}
