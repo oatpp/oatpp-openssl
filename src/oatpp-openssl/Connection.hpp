@@ -25,6 +25,7 @@
 #ifndef oatpp_openssl_Connection_hpp
 #define oatpp_openssl_Connection_hpp
 
+#include "oatpp/core/provider/Provider.hpp"
 #include "oatpp/core/data/stream/Stream.hpp"
 #include "oatpp/core/data/buffer/FIFOBuffer.hpp"
 
@@ -71,7 +72,7 @@ private:
   BIO* m_rbio;
   BIO* m_wbio;
 private:
-  std::shared_ptr<oatpp::data::stream::IOStream> m_stream;
+  provider::ResourceHandle<data::stream::IOStream> m_stream;
 private:
   std::atomic<bool> m_initialized;
 private:
@@ -87,7 +88,7 @@ public:
    * @param ssl - pointer to OpenSSL ssl object;.
    * @param stream - underlying transport stream. &id:oatpp::data::stream::IOStream;.
    */
-  Connection(SSL* ssl, const std::shared_ptr<oatpp::data::stream::IOStream>& stream);
+  Connection(SSL* ssl, const provider::ResourceHandle<data::stream::IOStream>& stream);
 
   /**
    * Virtual destructor.
@@ -154,7 +155,7 @@ public:
    * Get the underlying transport stream.
    * @return
    */
-  std::shared_ptr<data::stream::IOStream> getTransportStream();
+  provider::ResourceHandle<data::stream::IOStream> getTransportStream();
   
 };
   

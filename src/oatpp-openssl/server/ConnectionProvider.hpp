@@ -36,8 +36,16 @@ namespace oatpp { namespace openssl { namespace server {
  * Openssl server connection provider.
  * Extends &id:oatpp::base::Countable;, &id:oatpp::network::ServerConnectionProvider;.
  */
-class ConnectionProvider : public oatpp::base::Countable, public oatpp::network::ServerConnectionProvider {
+class ConnectionProvider : public oatpp::network::ServerConnectionProvider {
 private:
+
+  class ConnectionInvalidator : public provider::Invalidator<data::stream::IOStream> {
+  public:
+    void invalidate(const std::shared_ptr<data::stream::IOStream>& connection) override;
+  };
+
+private:
+  std::shared_ptr<ConnectionInvalidator> m_connectionInvalidator;
   std::shared_ptr<Config> m_config;
   std::shared_ptr<oatpp::network::ServerConnectionProvider> m_streamProvider;
 private:
@@ -51,7 +59,7 @@ public:
    * @param streamProvider - provider of underlying transport stream. &id:oatpp::network::ServerConnectionProvider;.
    */
   ConnectionProvider(const std::shared_ptr<Config>& config,
-                     const std::shared_ptr<oatpp::network::ServerConnectionProvider>& streamProvider);
+                     const std::shared_ptr<network::ServerConnectionProvider>& streamProvider);
 public:
 
   /**
@@ -61,7 +69,7 @@ public:
    * @return - `std::shared_ptr` to ConnectionProvider.
    */
   static std::shared_ptr<ConnectionProvider> createShared(const std::shared_ptr<Config>& config,
-                                                          const std::shared_ptr<oatpp::network::ServerConnectionProvider>& streamProvider);
+                                                          const std::shared_ptr<network::ServerConnectionProvider>& streamProvider);
 
   /**
    * Create shared ConnectionProvider.
@@ -90,7 +98,7 @@ public:
    * Get incoming connection.
    * @return &id:oatpp::data::stream::IOStream;.
    */
-  std::shared_ptr<data::stream::IOStream> get() override;
+  provider::ResourceHandle<data::stream::IOStream> get() override;
 
   /**
    * No need to implement this.<br>
@@ -100,7 +108,7 @@ public:
    * <br>
    * *It may be implemented later*
    */
-  oatpp::async::CoroutineStarterForResult<const std::shared_ptr<data::stream::IOStream>&> getAsync() override {
+  oatpp::async::CoroutineStarterForResult<const provider::ResourceHandle<data::stream::IOStream>&> getAsync() override {
     /*
      *  No need to implement this.
      *  For Asynchronous IO in oatpp it is considered to be a good practice
@@ -110,12 +118,6 @@ public:
     throw std::runtime_error("oatpp::openssl::server::ConnectionProvider::getAsync not implemented.");
   }
 
-  /**
-   * Will call `invalidateConnection()` for the underlying transport stream.
-   * @param connection - **MUST** be an instance of &id:oatpp::openssl::Connection;.
-   */
-  void invalidate(const std::shared_ptr<data::stream::IOStream>& connection) override;
-  
 };
   
 }}}
