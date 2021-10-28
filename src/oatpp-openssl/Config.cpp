@@ -38,16 +38,12 @@ std::shared_ptr<Config> Config::createShared() {
   return std::make_shared<Config>();
 }
 
-std::shared_ptr<Config> Config::createDefaultServerConfigShared(const oatpp::String& certFile,
-                                                                const oatpp::String& privateKeyFile,
-                                                                const oatpp::String& certChainFile)
+std::shared_ptr<Config> Config::createDefaultServerConfigShared(const oatpp::String& certChainFile,
+                                                                const oatpp::String& privateKeyFile)
 {
   auto config = createShared();
-  config->addContextConfigurer(std::make_shared<configurer::CertificateFile>(certFile));
+  config->addContextConfigurer(std::make_shared<configurer::CertificateChainFile>(certChainFile));
   config->addContextConfigurer(std::make_shared<configurer::PrivateKeyFile>(privateKeyFile));
-  if(certChainFile) {
-    config->addContextConfigurer(std::make_shared<configurer::CertificateChainFile>(certChainFile));
-  }
   return config;
 }
 

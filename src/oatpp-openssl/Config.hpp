@@ -42,9 +42,8 @@ public:
 
   static std::shared_ptr<Config> createShared();
 
-  static std::shared_ptr<Config> createDefaultServerConfigShared(const oatpp::String& certFile,
-                                                                 const oatpp::String& privateKeyFile,
-                                                                 const oatpp::String& certChainFile = nullptr);
+  static std::shared_ptr<Config> createDefaultServerConfigShared(const oatpp::String& certChainFile,
+                                                                 const oatpp::String& privateKeyFile);
 
   static std::shared_ptr<Config> createDefaultClientConfigShared();
 
