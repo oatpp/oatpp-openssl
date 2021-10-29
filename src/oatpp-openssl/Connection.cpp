@@ -118,8 +118,9 @@ async::CoroutineStarter Connection::ConnectionContext::initAsync() {
         case SSL_ERROR_WANT_WRITE:
           break;
         default:
-          OATPP_LOGE("[oatpp::openssl::Connection::ConnectionContext::initAsync()]", "Error. Handshake failed. err=%d", err);
-          throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::initAsync()]: Error. Handshake failed.");
+          //OATPP_LOGE("[oatpp::openssl::Connection::ConnectionContext::initAsync()]", "Error. Handshake failed. err=%d, errno=%d", err, er);
+          //throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::initAsync()]: Error. Handshake failed.");
+          return finish();
       }
 
       if(res == 1) {
