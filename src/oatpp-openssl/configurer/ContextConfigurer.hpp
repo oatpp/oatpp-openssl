@@ -29,11 +29,21 @@
 
 namespace oatpp { namespace openssl { namespace configurer {
 
+/**
+ * Context configurer.
+ */
 class ContextConfigurer {
 public:
 
+  /**
+   * virtual destructor.
+   */
   virtual ~ContextConfigurer() = default;
 
+  /**
+   * Configure SSL context.
+   * @param ctx
+   */
   virtual void configure(SSL_CTX* ctx) = 0;
 
 };
