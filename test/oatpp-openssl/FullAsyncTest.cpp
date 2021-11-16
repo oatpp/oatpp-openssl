@@ -182,7 +182,7 @@ void FullAsyncTest::onRun() {
       }
 
       { // test Big Echo with body
-        oatpp::data::stream::ChunkedBuffer stream;
+        oatpp::data::stream::BufferOutputStream stream;
         for(v_int32 i = 0; i < oatpp::data::buffer::IOBuffer::BUFFER_SIZE; i++) {
           stream.writeSimple("0123456789", 10);
         }
