@@ -1,3 +1,5 @@
+find_package(Threads)
+
 add_executable(module-tests
         oatpp-openssl/tests.cpp
         oatpp-openssl/FullTest.cpp
@@ -42,6 +44,7 @@ target_link_oatpp(module-tests)
 
 target_link_libraries(module-tests
         PRIVATE ${OATPP_THIS_MODULE_NAME}
+        PRIVATE Threads::Threads
 )
 
 add_test(module-tests module-tests)
