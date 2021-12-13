@@ -1,3 +1,5 @@
+find_package(Threads)
+
 add_executable(module-tests
         oatpp-openssl/tests.cpp
         oatpp-openssl/FullTest.cpp
@@ -18,6 +20,7 @@ add_executable(module-tests
 add_definitions(
         -DCERT_PEM_PATH="${CMAKE_CURRENT_LIST_DIR}/../utility/cert/test_key.pem"
         -DCERT_CRT_PATH="${CMAKE_CURRENT_LIST_DIR}/../utility/cert/test_cert.crt"
+        -DCERT_DH_PARAMS_PATH="${CMAKE_CURRENT_LIST_DIR}/../utility/cert/test_dhparams.pem"
 )
 
 #################################################################
@@ -42,6 +45,7 @@ target_link_oatpp(module-tests)
 
 target_link_libraries(module-tests
         PRIVATE ${OATPP_THIS_MODULE_NAME}
+        PRIVATE Threads::Threads
 )
 
 add_test(module-tests module-tests)

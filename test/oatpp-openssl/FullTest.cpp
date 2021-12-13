@@ -29,6 +29,7 @@
 #include "app/Controller.hpp"
 
 #include "oatpp-openssl/client/ConnectionProvider.hpp"
+#include "oatpp-openssl/configurer/TemporaryDhParamsFile.hpp"
 #include "oatpp-openssl/server/ConnectionProvider.hpp"
 
 #include "oatpp/web/client/HttpRequestExecutor.hpp"
@@ -79,10 +80,14 @@ public:
 
     OATPP_LOGD("oatpp::openssl::Config", "pem='%s'", CERT_PEM_PATH);
     OATPP_LOGD("oatpp::openssl::Config", "crt='%s'", CERT_CRT_PATH);
+    OATPP_LOGD("oatpp::openssl::Config", "dh_params='%s'", CERT_DH_PARAMS_PATH);
 
     auto config = oatpp::openssl::Config::createDefaultServerConfigShared(CERT_CRT_PATH, CERT_PEM_PATH);
-    return oatpp::openssl::server::ConnectionProvider::createShared(config, streamProvider);
+    config->addContextConfigurer(
+        std::make_shared<oatpp::openssl::configurer::TemporaryDhParamsFile>(CERT_DH_PARAMS_PATH)
+    );
 
+    return oatpp::openssl::server::ConnectionProvider::createShared(config, streamProvider);
   }());
 
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, httpRouter)([] {

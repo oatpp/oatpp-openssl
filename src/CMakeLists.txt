@@ -15,6 +15,8 @@ add_library(${OATPP_THIS_MODULE_NAME}
         oatpp-openssl/configurer/ContextConfigurer.hpp
         oatpp-openssl/configurer/PrivateKeyFile.cpp
         oatpp-openssl/configurer/PrivateKeyFile.hpp
+        oatpp-openssl/configurer/TemporaryDhParamsFile.cpp
+        oatpp-openssl/configurer/TemporaryDhParamsFile.hpp
 )
 
 set_target_properties(${OATPP_THIS_MODULE_NAME} PROPERTIES
