@@ -6,7 +6,8 @@
  *                (_____)(__)(__)(__)  |_|    |_|
  *
  *
- * Copyright 2018-present, Leonid Stryzhevskyi <lganzzzo@gmail.com>
+ * Copyright 2018-present, Leonid Stryzhevskyi <lganzzzo@gmail.com>,
+ * Matthias Haselmaier <mhaselmaier@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -364,6 +365,10 @@ oatpp::data::stream::Context& Connection::getInputStreamContext() {
 
 provider::ResourceHandle<data::stream::IOStream> Connection::getTransportStream() {
   return m_stream;
+}
+
+SSL* Connection::getOpenSSLContext() const {
+  return m_ssl;
 }
   
 }}

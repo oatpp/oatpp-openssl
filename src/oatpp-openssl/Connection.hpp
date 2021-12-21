@@ -6,7 +6,8 @@
  *                (_____)(__)(__)(__)  |_|    |_|
  *
  *
- * Copyright 2018-present, Leonid Stryzhevskyi <lganzzzo@gmail.com>
+ * Copyright 2018-present, Leonid Stryzhevskyi <lganzzzo@gmail.com>,
+ * Matthias Haselmaier <mhaselmaier@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -157,6 +158,12 @@ public:
    */
   provider::ResourceHandle<data::stream::IOStream> getTransportStream();
   
+  /**
+   * Get the OpenSSL context.
+   * @return
+   */
+  SSL* getOpenSSLContext() const;
+
 };
   
 }}
