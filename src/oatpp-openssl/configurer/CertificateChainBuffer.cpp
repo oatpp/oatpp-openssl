@@ -26,7 +26,7 @@
 
 namespace oatpp { namespace openssl { namespace configurer {
 
-CertificateChainBuffer::CertificateChainBuffer(void *certificateChainBuffer, int certificateChainBufferLength)
+CertificateChainBuffer::CertificateChainBuffer(const void *certificateChainBuffer, int certificateChainBufferLength)
 {
   auto buffer = std::shared_ptr<BIO>(BIO_new_mem_buf(certificateChainBuffer, certificateChainBufferLength), BIO_free);
   m_chainOfCertificates = std::shared_ptr<X509>(PEM_read_bio_X509(buffer.get(), nullptr, nullptr, nullptr), X509_free);

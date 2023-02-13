@@ -91,26 +91,14 @@ public:
     if(m_useBufferedCertAndPrivateKey) {
       config = oatpp::openssl::Config::createShared();
 
-      std::ifstream certFile(CERT_CRT_PATH, std::ios::binary | std::ios::ate);
-      std::ifstream privateKeyFile(CERT_PEM_PATH, std::ios::binary | std::ios::ate);
-
-      std::streamsize certFileSize = certFile.tellg();
-      std::streamsize privateKeyFileSize = privateKeyFile.tellg();
-
-      std::vector<char> certBuffer(certFileSize);
-      std::vector<char> privateKeyBuffer(privateKeyFileSize);
-
-      certFile.seekg(0, std::ios::beg);
-      privateKeyFile.seekg(0, std::ios::beg);
-
-      OATPP_ASSERT(certFile.read(certBuffer.data(), certFileSize))
-      OATPP_ASSERT(privateKeyFile.read(privateKeyBuffer.data(), privateKeyFileSize))
+      auto certBuffer = oatpp::String::loadFromFile(CERT_CRT_PATH);
+      auto privateKeyBuffer = oatpp::String::loadFromFile(CERT_PEM_PATH);
 
       config->addContextConfigurer(
-        std::make_shared<oatpp::openssl::configurer::PrivateKeyBuffer>(privateKeyBuffer.data(), privateKeyBuffer.size())
+        std::make_shared<oatpp::openssl::configurer::PrivateKeyBuffer>(privateKeyBuffer->data(), privateKeyBuffer->size())
       );
       config->addContextConfigurer(
-        std::make_shared<oatpp::openssl::configurer::CertificateBuffer>(certBuffer.data(), certBuffer.size())
+        std::make_shared<oatpp::openssl::configurer::CertificateBuffer>(certBuffer->data(), certBuffer->size())
       );
     } else {
       config = oatpp::openssl::Config::createDefaultServerConfigShared(CERT_CRT_PATH, CERT_PEM_PATH);

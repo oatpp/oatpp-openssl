@@ -45,7 +45,7 @@ public:
    * @param certificateChainBuffer
    * @param certificateChainBufferLength
    */
-  CertificateChainBuffer(void *certificateChainBuffer, int certificateChainBufferLength);
+  CertificateChainBuffer(const void *certificateChainBuffer, int certificateChainBufferLength);
 
   void configure(SSL_CTX* ctx) override;
 

@@ -26,7 +26,7 @@
 
 namespace oatpp { namespace openssl { namespace configurer {
 
-PrivateKeyBuffer::PrivateKeyBuffer(void *privateKeyBuffer, int privateKeyBufferLength)
+PrivateKeyBuffer::PrivateKeyBuffer(const void *privateKeyBuffer, int privateKeyBufferLength)
 {
   auto buffer = std::shared_ptr<BIO>(BIO_new_mem_buf(privateKeyBuffer, privateKeyBufferLength), BIO_free);
   m_privateKey = std::shared_ptr<EVP_PKEY>(PEM_read_bio_PrivateKey(buffer.get(), nullptr, nullptr, nullptr), EVP_PKEY_free);
