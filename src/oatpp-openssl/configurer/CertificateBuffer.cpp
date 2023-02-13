@@ -22,31 +22,25 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_FullTest_hpp
-#define oatpp_test_web_FullTest_hpp
+#include "CertificateBuffer.hpp"
 
-#include "oatpp-test/UnitTest.hpp"
+namespace oatpp { namespace openssl { namespace configurer {
 
-namespace oatpp { namespace test { namespace openssl {
+CertificateBuffer::CertificateBuffer(const void *certificateBuffer, int certificateBufferLength)
+{
+  auto buffer = std::shared_ptr<BIO>(BIO_new_mem_buf(certificateBuffer, certificateBufferLength), BIO_free);
+  m_certificate = std::shared_ptr<X509>(PEM_read_bio_X509(buffer.get(), nullptr, nullptr, nullptr), X509_free);
+  if (m_certificate == nullptr) {
+    throw std::runtime_error("[oatpp::openssl::configurer::CertificateBuffer::CertificateBuffer()]: Error. "
+                             "'m_certificate' == nullptr.");
+  }
+}
 
-class FullTest : public UnitTest {
-private:
-  v_uint16 m_port;
-  v_int32 m_iterationsPerStep;
-  bool m_useBufferedCertAndPrivateKey;
-public:
-  
-  FullTest(v_uint16 port, v_int32 iterationsPerStep, bool useBufferedCertAndPrivateKey)
-    : UnitTest("TEST[web::FullTest]")
-    , m_port(port)
-    , m_iterationsPerStep(iterationsPerStep)
-    , m_useBufferedCertAndPrivateKey(useBufferedCertAndPrivateKey)
-  {}
-
-  void onRun() override;
-
-};
+void CertificateBuffer::configure(SSL_CTX *ctx) {
+  if (SSL_CTX_use_certificate(ctx, m_certificate.get()) <= 0) {
+    throw std::runtime_error("[oatpp::openssl::configurer::CertificateBuffer::configure()]: Error. "
+                             "Call to 'SSL_CTX_use_certificate' failed.");
+  }
+}
 
 }}}
-  
-#endif /* oatpp_test_web_FullTest_hpp */

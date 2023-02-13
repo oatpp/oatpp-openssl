@@ -8,11 +8,17 @@ add_library(${OATPP_THIS_MODULE_NAME}
         oatpp-openssl/client/ConnectionProvider.hpp
         oatpp-openssl/server/ConnectionProvider.cpp
         oatpp-openssl/server/ConnectionProvider.hpp
+        oatpp-openssl/configurer/CertificateChainBuffer.cpp
+        oatpp-openssl/configurer/CertificateChainBuffer.hpp
         oatpp-openssl/configurer/CertificateChainFile.cpp
         oatpp-openssl/configurer/CertificateChainFile.hpp
+        oatpp-openssl/configurer/CertificateBuffer.cpp
+        oatpp-openssl/configurer/CertificateBuffer.hpp
         oatpp-openssl/configurer/CertificateFile.cpp
         oatpp-openssl/configurer/CertificateFile.hpp
         oatpp-openssl/configurer/ContextConfigurer.hpp
+        oatpp-openssl/configurer/PrivateKeyBuffer.cpp
+        oatpp-openssl/configurer/PrivateKeyBuffer.hpp
         oatpp-openssl/configurer/PrivateKeyFile.cpp
         oatpp-openssl/configurer/PrivateKeyFile.hpp
         oatpp-openssl/configurer/TemporaryDhParamsFile.cpp

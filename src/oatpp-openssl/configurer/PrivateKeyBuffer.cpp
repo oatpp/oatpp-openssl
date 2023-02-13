@@ -22,31 +22,26 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_FullTest_hpp
-#define oatpp_test_web_FullTest_hpp
+#include "PrivateKeyBuffer.hpp"
 
-#include "oatpp-test/UnitTest.hpp"
+namespace oatpp { namespace openssl { namespace configurer {
 
-namespace oatpp { namespace test { namespace openssl {
+PrivateKeyBuffer::PrivateKeyBuffer(const void *privateKeyBuffer, int privateKeyBufferLength)
+{
+  auto buffer = std::shared_ptr<BIO>(BIO_new_mem_buf(privateKeyBuffer, privateKeyBufferLength), BIO_free);
+  m_privateKey = std::shared_ptr<EVP_PKEY>(PEM_read_bio_PrivateKey(buffer.get(), nullptr, nullptr, nullptr), EVP_PKEY_free);
+  if (m_privateKey == nullptr) {
+    throw std::runtime_error("[oatpp::openssl::configurer::PrivateKeyBuffer::PrivateKeyBuffer()]: Error. "
+                             "'m_privateKey' == nullptr.");
+  }
+}
 
-class FullTest : public UnitTest {
-private:
-  v_uint16 m_port;
-  v_int32 m_iterationsPerStep;
-  bool m_useBufferedCertAndPrivateKey;
-public:
-  
-  FullTest(v_uint16 port, v_int32 iterationsPerStep, bool useBufferedCertAndPrivateKey)
-    : UnitTest("TEST[web::FullTest]")
-    , m_port(port)
-    , m_iterationsPerStep(iterationsPerStep)
-    , m_useBufferedCertAndPrivateKey(useBufferedCertAndPrivateKey)
-  {}
-
-  void onRun() override;
-
-};
+void PrivateKeyBuffer::configure(SSL_CTX *ctx) {
+  if (SSL_CTX_use_PrivateKey(ctx, m_privateKey.get()) <= 0) {
+    throw std::runtime_error("[oatpp::openssl::configurer::PrivateKeyBuffer::configure()]: Error. "
+                             "Call to 'SSL_CTX_use_PrivateKey' failed.");
+  }
+}
 
 }}}
-  
-#endif /* oatpp_test_web_FullTest_hpp */
+

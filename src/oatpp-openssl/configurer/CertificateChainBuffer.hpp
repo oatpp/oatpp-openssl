@@ -22,31 +22,35 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_FullTest_hpp
-#define oatpp_test_web_FullTest_hpp
+#ifndef oatpp_openssl_configurer_CertificateChainBuffer_hpp
+#define oatpp_openssl_configurer_CertificateChainBuffer_hpp
 
-#include "oatpp-test/UnitTest.hpp"
+#include "ContextConfigurer.hpp"
 
-namespace oatpp { namespace test { namespace openssl {
+#include "oatpp/core/Types.hpp"
 
-class FullTest : public UnitTest {
+namespace oatpp { namespace openssl { namespace configurer {
+
+/**
+ * Context configurer for certificate chain file.
+ * @extends &id:oatpp::openssl::configurer::ContextConfigurer;.
+ */
+class CertificateChainBuffer : public ContextConfigurer {
 private:
-  v_uint16 m_port;
-  v_int32 m_iterationsPerStep;
-  bool m_useBufferedCertAndPrivateKey;
+    std::shared_ptr<X509> m_chainOfCertificates;
 public:
-  
-  FullTest(v_uint16 port, v_int32 iterationsPerStep, bool useBufferedCertAndPrivateKey)
-    : UnitTest("TEST[web::FullTest]")
-    , m_port(port)
-    , m_iterationsPerStep(iterationsPerStep)
-    , m_useBufferedCertAndPrivateKey(useBufferedCertAndPrivateKey)
-  {}
 
-  void onRun() override;
+  /**
+   * Constructor.
+   * @param certificateChainBuffer
+   * @param certificateChainBufferLength
+   */
+  CertificateChainBuffer(const void *certificateChainBuffer, int certificateChainBufferLength);
+
+  void configure(SSL_CTX* ctx) override;
 
 };
 
 }}}
-  
-#endif /* oatpp_test_web_FullTest_hpp */
+
+#endif // oatpp_openssl_configurer_CertificateChainBuffer_hpp

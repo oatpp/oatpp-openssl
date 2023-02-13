@@ -22,6 +22,7 @@
  *
  ***************************************************************************/
 
+#include <fstream>
 #include "FullTest.hpp"
 
 #include "app/Client.hpp"
@@ -49,6 +50,8 @@
 #include "oatpp/core/macro/component.hpp"
 
 #include "oatpp-test/web/ClientServerTestRunner.hpp"
+#include "oatpp-openssl/configurer/PrivateKeyBuffer.hpp"
+#include "oatpp-openssl/configurer/CertificateBuffer.hpp"
 
 namespace oatpp { namespace test { namespace openssl {
 
@@ -57,10 +60,12 @@ namespace {
 class TestComponent {
 private:
   v_uint16 m_port;
+  bool m_useBufferedCertAndPrivateKey;
 public:
 
-  TestComponent(v_uint16 port)
+  TestComponent(v_uint16 port, bool useBufferedCertAndPrivateKey)
     : m_port(port)
+    , m_useBufferedCertAndPrivateKey(useBufferedCertAndPrivateKey)
   {}
 
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::virtual_::Interface>, virtualInterface)([] {
@@ -78,13 +83,28 @@ public:
       streamProvider = oatpp::network::tcp::server::ConnectionProvider::createShared({"localhost", m_port});
     }
 
-    OATPP_LOGD("oatpp::openssl::Config", "pem='%s'", CERT_PEM_PATH);
-    OATPP_LOGD("oatpp::openssl::Config", "crt='%s'", CERT_CRT_PATH);
+    OATPP_LOGD("oatpp::openssl::Config", "pem='%s' loaded from %s", CERT_PEM_PATH, m_useBufferedCertAndPrivateKey ? "memory" : "file");
+    OATPP_LOGD("oatpp::openssl::Config", "crt='%s' loaded from %s", CERT_CRT_PATH, m_useBufferedCertAndPrivateKey ? "memory" : "file");
     OATPP_LOGD("oatpp::openssl::Config", "dh_params='%s'", CERT_DH_PARAMS_PATH);
+    std::shared_ptr<oatpp::openssl::Config> config;
 
-    auto config = oatpp::openssl::Config::createDefaultServerConfigShared(CERT_CRT_PATH, CERT_PEM_PATH);
+    if(m_useBufferedCertAndPrivateKey) {
+      config = oatpp::openssl::Config::createShared();
+
+      auto certBuffer = oatpp::String::loadFromFile(CERT_CRT_PATH);
+      auto privateKeyBuffer = oatpp::String::loadFromFile(CERT_PEM_PATH);
+
+      config->addContextConfigurer(
+        std::make_shared<oatpp::openssl::configurer::PrivateKeyBuffer>(privateKeyBuffer->data(), privateKeyBuffer->size())
+      );
+      config->addContextConfigurer(
+        std::make_shared<oatpp::openssl::configurer::CertificateBuffer>(certBuffer->data(), certBuffer->size())
+      );
+    } else {
+      config = oatpp::openssl::Config::createDefaultServerConfigShared(CERT_CRT_PATH, CERT_PEM_PATH);
+    }
     config->addContextConfigurer(
-        std::make_shared<oatpp::openssl::configurer::TemporaryDhParamsFile>(CERT_DH_PARAMS_PATH)
+      std::make_shared<oatpp::openssl::configurer::TemporaryDhParamsFile>(CERT_DH_PARAMS_PATH)
     );
 
     return oatpp::openssl::server::ConnectionProvider::createShared(config, streamProvider);
@@ -125,7 +145,7 @@ public:
   
 void FullTest::onRun() {
 
-  TestComponent component(m_port);
+  TestComponent component(m_port, m_useBufferedCertAndPrivateKey);
 
   oatpp::test::web::ClientServerTestRunner runner;
 

@@ -22,31 +22,35 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_test_web_FullTest_hpp
-#define oatpp_test_web_FullTest_hpp
+#ifndef oatpp_openssl_configurer_PrivateKeyBuffer_hpp
+#define oatpp_openssl_configurer_PrivateKeyBuffer_hpp
 
-#include "oatpp-test/UnitTest.hpp"
+#include "ContextConfigurer.hpp"
 
-namespace oatpp { namespace test { namespace openssl {
+#include "oatpp/core/Types.hpp"
 
-class FullTest : public UnitTest {
+namespace oatpp { namespace openssl { namespace configurer {
+
+/**
+ * Context configurer for private key file.
+ * @extends &id:oatpp::openssl::configurer::ContextConfigurer;.
+ */
+class PrivateKeyBuffer : public ContextConfigurer {
 private:
-  v_uint16 m_port;
-  v_int32 m_iterationsPerStep;
-  bool m_useBufferedCertAndPrivateKey;
+  std::shared_ptr<EVP_PKEY> m_privateKey;
 public:
-  
-  FullTest(v_uint16 port, v_int32 iterationsPerStep, bool useBufferedCertAndPrivateKey)
-    : UnitTest("TEST[web::FullTest]")
-    , m_port(port)
-    , m_iterationsPerStep(iterationsPerStep)
-    , m_useBufferedCertAndPrivateKey(useBufferedCertAndPrivateKey)
-  {}
 
-  void onRun() override;
+  /**
+   * Constructor.
+   * @param privateKeyBuffer
+   * @param privateKeyBufferLength
+   */
+  PrivateKeyBuffer(const void *privateKeyBuffer, int privateKeyBufferLength);
+
+  void configure(SSL_CTX* ctx) override;
 
 };
 
 }}}
-  
-#endif /* oatpp_test_web_FullTest_hpp */
+
+#endif // oatpp_openssl_configurer_PrivateKeyBuffer_hpp
