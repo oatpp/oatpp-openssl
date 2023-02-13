@@ -33,16 +33,18 @@ class FullTest : public UnitTest {
 private:
   v_uint16 m_port;
   v_int32 m_iterationsPerStep;
+  bool m_useBufferedCertAndPrivateKey;
 public:
   
-  FullTest(v_uint16 port, v_int32 iterationsPerStep)
+  FullTest(v_uint16 port, v_int32 iterationsPerStep, bool useBufferedCertAndPrivateKey)
     : UnitTest("TEST[web::FullTest]")
     , m_port(port)
     , m_iterationsPerStep(iterationsPerStep)
+    , m_useBufferedCertAndPrivateKey(useBufferedCertAndPrivateKey)
   {}
 
   void onRun() override;
-  
+
 };
 
 }}}

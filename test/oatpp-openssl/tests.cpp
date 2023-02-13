@@ -19,10 +19,20 @@ void runTests() {
 
   {
 
-    oatpp::test::openssl::FullTest test_virtual(0, 100);
+    oatpp::test::openssl::FullTest test_virtual(0, 100, false);
     test_virtual.run();
 
-    oatpp::test::openssl::FullTest test_port(8443, 10);
+    oatpp::test::openssl::FullTest test_port(8443, 10, false);
+    test_port.run();
+
+  }
+
+  {
+
+    oatpp::test::openssl::FullTest test_virtual(0, 100, true);
+    test_virtual.run();
+
+    oatpp::test::openssl::FullTest test_port(8443, 10, true);
     test_port.run();
 
   }
