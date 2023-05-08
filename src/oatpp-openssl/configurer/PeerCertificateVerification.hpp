@@ -22,8 +22,8 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_openssl_configurer_CertificateBuffer_hpp
-#define oatpp_openssl_configurer_CertificateBuffer_hpp
+#ifndef oatpp_openssl_configurer_VerifyPeer_hpp
+#define oatpp_openssl_configurer_VerifyPeer_hpp
 
 #include "ContextConfigurer.hpp"
 
@@ -31,22 +31,26 @@
 
 namespace oatpp { namespace openssl { namespace configurer {
 
+enum class CertificateVerificationMode {
+  EnabledStrong, // A peer certificate is validated and MUST be presented
+  EnabledWeak, // A peer certificate is validated IF it is presented
+  Disabled, // No verification of peer certificate
+};
+
 /**
- * Context configurer for certificate file.
+ * Context configurer for setting peer certificate verification policy for the TLS connection
  * @extends &id:oatpp::openssl::configurer::ContextConfigurer;.
  */
-class CertificateBuffer : public ContextConfigurer {
+class PeerCertificateVerification : public ContextConfigurer {
 private:
-  std::shared_ptr<X509> m_certificate;
+    CertificateVerificationMode m_mode;
 public:
 
   /**
    * Constructor.
-   * @param certificateBuffer
-   * @param certificateBufferLength
+   * @param state
    */
-  CertificateBuffer(const void *certificateBuffer, int certificateBufferLength);
-  CertificateBuffer(const std::string& certificateBuffer);
+  PeerCertificateVerification(CertificateVerificationMode state);
 
   void configure(SSL_CTX* ctx) override;
 
@@ -54,4 +58,4 @@ public:
 
 }}}
 
-#endif // oatpp_openssl_configurer_CertificateBuffer_hpp
+#endif // oatpp_openssl_configurer_VerifyPeer_hpp

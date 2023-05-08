@@ -22,8 +22,8 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_openssl_configurer_CertificateBuffer_hpp
-#define oatpp_openssl_configurer_CertificateBuffer_hpp
+#ifndef oatpp_openssl_configurer_CaCertificateBuffer_hpp
+#define oatpp_openssl_configurer_CaCertificateBuffer_hpp
 
 #include "ContextConfigurer.hpp"
 
@@ -32,21 +32,21 @@
 namespace oatpp { namespace openssl { namespace configurer {
 
 /**
- * Context configurer for certificate file.
+ * Context configurer for setting trusted Certificate Authorities (CA's) for the TLS connection
  * @extends &id:oatpp::openssl::configurer::ContextConfigurer;.
  */
-class CertificateBuffer : public ContextConfigurer {
+class CaCertificateBundleBuffer : public ContextConfigurer {
 private:
-  std::shared_ptr<X509> m_certificate;
+  std::shared_ptr<STACK_OF(X509_INFO)> m_certificates;
 public:
 
   /**
    * Constructor.
-   * @param certificateBuffer
-   * @param certificateBufferLength
+   * @param certificateBuffer PEM formatted buffer containing one or more certificates
+   * @param certificateBufferLength length of buffer in bytes (passing 0 is interpreted as a no-op)
    */
-  CertificateBuffer(const void *certificateBuffer, int certificateBufferLength);
-  CertificateBuffer(const std::string& certificateBuffer);
+  CaCertificateBundleBuffer(const void *certificateBuffer, int certificateBufferLength);
+  CaCertificateBundleBuffer(const std::string& certificateBuffer);
 
   void configure(SSL_CTX* ctx) override;
 
@@ -54,4 +54,4 @@ public:
 
 }}}
 
-#endif // oatpp_openssl_configurer_CertificateBuffer_hpp
+#endif // oatpp_openssl_configurer_CaCertificateBuffer_hpp

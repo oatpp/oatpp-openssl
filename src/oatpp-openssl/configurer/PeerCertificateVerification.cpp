@@ -22,36 +22,28 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_openssl_configurer_CertificateBuffer_hpp
-#define oatpp_openssl_configurer_CertificateBuffer_hpp
-
-#include "ContextConfigurer.hpp"
-
-#include "oatpp/core/Types.hpp"
+#include "PeerCertificateVerification.hpp"
+#include <openssl/ssl.h>
 
 namespace oatpp { namespace openssl { namespace configurer {
 
-/**
- * Context configurer for certificate file.
- * @extends &id:oatpp::openssl::configurer::ContextConfigurer;.
- */
-class CertificateBuffer : public ContextConfigurer {
-private:
-  std::shared_ptr<X509> m_certificate;
-public:
+PeerCertificateVerification::PeerCertificateVerification(CertificateVerificationMode mode)
+  : m_mode(mode)
+{}
 
-  /**
-   * Constructor.
-   * @param certificateBuffer
-   * @param certificateBufferLength
-   */
-  CertificateBuffer(const void *certificateBuffer, int certificateBufferLength);
-  CertificateBuffer(const std::string& certificateBuffer);
+static int toSslVerify(CertificateVerificationMode mode) {
+  switch (mode) {
+    case CertificateVerificationMode::EnabledStrong:
+      return SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+    case CertificateVerificationMode::EnabledWeak:
+      return SSL_VERIFY_PEER;
+    case CertificateVerificationMode::Disabled:
+      return SSL_VERIFY_NONE;
+  }
+}
 
-  void configure(SSL_CTX* ctx) override;
-
-};
+void PeerCertificateVerification::configure(SSL_CTX *ctx) {
+  SSL_CTX_set_verify(ctx, toSslVerify(m_mode), nullptr);
+}
 
 }}}
-
-#endif // oatpp_openssl_configurer_CertificateBuffer_hpp

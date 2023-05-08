@@ -29,6 +29,7 @@
 #include "oatpp/network/tcp/client/ConnectionProvider.hpp"
 
 #include <openssl/crypto.h>
+#include <openssl/err.h>
 
 namespace oatpp { namespace openssl { namespace client {
 
@@ -117,6 +118,10 @@ provider::ResourceHandle<data::stream::IOStream> ConnectionProvider::get(){
   }
 
   auto ssl = SSL_new(m_ctx);
+  if(ssl == NULL) {
+      std::string openssl_err_msg = ERR_error_string(ERR_get_error(), NULL);
+      throw std::runtime_error("[oatpp::openssl::client::ConnectionProvider::get()]: Error. Could not instantiate ssl object." + openssl_err_msg);
+  }
   SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
   SSL_set_connect_state(ssl);
   SSL_set_tlsext_host_name(ssl, host->c_str());

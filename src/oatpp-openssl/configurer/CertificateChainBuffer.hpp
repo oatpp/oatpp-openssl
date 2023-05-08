@@ -37,15 +37,19 @@ namespace oatpp { namespace openssl { namespace configurer {
  */
 class CertificateChainBuffer : public ContextConfigurer {
 private:
-    std::shared_ptr<X509> m_chainOfCertificates;
+    std::shared_ptr<STACK_OF(X509_INFO)> m_certificates;
 public:
 
   /**
    * Constructor.
    * @param certificateChainBuffer
    * @param certificateChainBufferLength
+   *
+   * The first certificate in [certificateChainBuffer] is considered the leaf certificate and the remaining are
+   * considered intermediate ca certificates.
    */
   CertificateChainBuffer(const void *certificateChainBuffer, int certificateChainBufferLength);
+  CertificateChainBuffer(const std::string& certificateChainBuffer);
 
   void configure(SSL_CTX* ctx) override;
 
