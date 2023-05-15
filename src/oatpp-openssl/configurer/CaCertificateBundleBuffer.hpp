@@ -46,7 +46,7 @@ public:
    * @param certificateBufferLength length of buffer in bytes (passing 0 is interpreted as a no-op)
    */
   CaCertificateBundleBuffer(const void *certificateBuffer, int certificateBufferLength);
-  CaCertificateBundleBuffer(const std::string& certificateBuffer);
+  CaCertificateBundleBuffer(const oatpp::String& certificateBuffer);
 
   void configure(SSL_CTX* ctx) override;
 

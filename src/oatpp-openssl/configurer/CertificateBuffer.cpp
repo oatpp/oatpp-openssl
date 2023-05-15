@@ -22,12 +22,13 @@
  *
  ***************************************************************************/
 
+#include <openssl/err.h>
 #include "CertificateBuffer.hpp"
 
 namespace oatpp { namespace openssl { namespace configurer {
 
-CertificateBuffer::CertificateBuffer(const std::string& certificateBuffer)
-  : CertificateBuffer::CertificateBuffer(certificateBuffer.data(), certificateBuffer.size())
+CertificateBuffer::CertificateBuffer(const oatpp::String& certificateBuffer)
+  : CertificateBuffer::CertificateBuffer(certificateBuffer->data(), certificateBuffer->size())
 {}
 
 CertificateBuffer::CertificateBuffer(const void *certificateBuffer, int certificateBufferLength)
@@ -36,10 +37,15 @@ CertificateBuffer::CertificateBuffer(const void *certificateBuffer, int certific
     return;
   }
   auto buffer = std::shared_ptr<BIO>(BIO_new_mem_buf(certificateBuffer, certificateBufferLength), BIO_free);
+  if (buffer == nullptr) {
+    throw std::runtime_error("[oatpp::openssl::configurer::CertificateBuffer::CertificateBuffer()]: Error. BIO_new_mem_buf(): "
+                             + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+  }
+
   m_certificate = std::shared_ptr<X509>(PEM_read_bio_X509(buffer.get(), nullptr, nullptr, nullptr), X509_free);
   if (m_certificate == nullptr) {
-    throw std::runtime_error("[oatpp::openssl::configurer::CertificateBuffer::CertificateBuffer()]: Error. "
-                             "'m_certificate' == nullptr.");
+    throw std::runtime_error("[oatpp::openssl::configurer::CertificateBuffer::CertificateBuffer()]: Error. PEM_read_bio_X509(): "
+                             + std::string(ERR_error_string(ERR_get_error(), nullptr)));
   }
 }
 
@@ -48,8 +54,8 @@ void CertificateBuffer::configure(SSL_CTX *ctx) {
     return;
   }
   if (SSL_CTX_use_certificate(ctx, m_certificate.get()) <= 0) {
-    throw std::runtime_error("[oatpp::openssl::configurer::CertificateBuffer::configure()]: Error. "
-                             "Call to 'SSL_CTX_use_certificate' failed.");
+    throw std::runtime_error("[oatpp::openssl::configurer::CertificateBuffer::configure()]: Error. SSL_CTX_use_certificate(): "
+                             + std::string(ERR_error_string(ERR_get_error(), nullptr)));
   }
 }
 

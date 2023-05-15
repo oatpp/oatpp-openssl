@@ -118,8 +118,8 @@ provider::ResourceHandle<data::stream::IOStream> ConnectionProvider::get(){
   }
 
   auto ssl = SSL_new(m_ctx);
-  if(ssl == NULL) {
-      std::string openssl_err_msg = ERR_error_string(ERR_get_error(), NULL);
+  if(ssl == nullptr) {
+      std::string openssl_err_msg = ERR_error_string(ERR_get_error(), nullptr);
       throw std::runtime_error("[oatpp::openssl::client::ConnectionProvider::get()]: Error. Could not instantiate ssl object." + openssl_err_msg);
   }
   SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);

@@ -25,6 +25,7 @@
 #include "CertificateChainBuffer.hpp"
 
 #include <openssl/x509_vfy.h>
+#include <openssl/err.h>
 
 namespace oatpp { namespace openssl { namespace configurer {
 
@@ -32,8 +33,8 @@ static void deleteStackOfX509Info(STACK_OF(X509_INFO) *p) {
   sk_X509_INFO_pop_free(p, X509_INFO_free);
 }
 
-CertificateChainBuffer::CertificateChainBuffer(const std::string& certificateChainBuffer)
-  : CertificateChainBuffer::CertificateChainBuffer(certificateChainBuffer.data(), certificateChainBuffer.size())
+CertificateChainBuffer::CertificateChainBuffer(const oatpp::String& certificateChainBuffer)
+  : CertificateChainBuffer::CertificateChainBuffer(certificateChainBuffer->data(), certificateChainBuffer->size())
 {}
 
 CertificateChainBuffer::CertificateChainBuffer(const void *certificateChainBuffer, int certificateChainBufferLength)
@@ -43,15 +44,15 @@ CertificateChainBuffer::CertificateChainBuffer(const void *certificateChainBuffe
   }
   auto buffer = std::shared_ptr<BIO>(BIO_new_mem_buf(certificateChainBuffer, certificateChainBufferLength), BIO_free);
   if (buffer == nullptr) {
-    throw std::runtime_error("[oatpp::openssl::configurer::CertificateChainBuffer::CertificateChainBuffer()]: Error. "
-                             "'buffer' == nullptr.");
+    throw std::runtime_error("[oatpp::openssl::configurer::CertificateChainBuffer::CertificateChainBuffer()]: Error. BIO_new_mem_buf(): "
+                             + std::string(ERR_error_string(ERR_get_error(), nullptr)));
   }
 
   m_certificates = std::shared_ptr<STACK_OF(X509_INFO)>(PEM_X509_INFO_read_bio(buffer.get(), nullptr, nullptr, nullptr), deleteStackOfX509Info);
   if (m_certificates == nullptr)
   {
-    throw std::runtime_error("[oatpp::openssl::configurer::CertificateBuffer::configure()]: Error. "
-                             "PEM_X509_INFO_read_bio() failed.");
+    throw std::runtime_error("[oatpp::openssl::configurer::CertificateChainBuffer::CertificateChainBuffer()]: Error. PEM_X509_INFO_read_bio(): "
+                             + std::string(ERR_error_string(ERR_get_error(), nullptr)));
   }
 }
 
@@ -69,8 +70,8 @@ void CertificateChainBuffer::configure(SSL_CTX *ctx) {
       if(SSL_CTX_use_certificate(ctx, certificate)) {
         break;
       } else {
-        throw std::runtime_error("[oatpp::openssl::configurer::CertificateBuffer::configure()]: Error. "
-                                 "SSL_CTX_use_certificate() failed.");
+        throw std::runtime_error("[oatpp::openssl::configurer::CertificateChainBuffer::configure()]: Error. SSL_CTX_use_certificate(): "
+                                 + std::string(ERR_error_string(ERR_get_error(), nullptr)));
       }
     }
   }
@@ -83,16 +84,16 @@ void CertificateChainBuffer::configure(SSL_CTX *ctx) {
 
   // Cleanup the previous certificate chain
   if(!SSL_CTX_clear_chain_certs(ctx)) {
-    throw std::runtime_error("[oatpp::openssl::configurer::CertificateChainBuffer::configure()]: Error. "
-                             "SSL_CTX_clear_chain_certs() failed.");
+    throw std::runtime_error("[oatpp::openssl::configurer::CertificateChainBuffer::configure()]: Error. SSL_CTX_clear_chain_certs(): "
+                             + std::string(ERR_error_string(ERR_get_error(), nullptr)));
   }
 
   // The next certificates in the chain is the intermediate certificates
   while (++i < numberOfCertificates) {
     auto certificate = sk_X509_INFO_value(m_certificates.get(), i)->x509;
     if(certificate != nullptr && !SSL_CTX_add1_chain_cert(ctx, certificate)) {
-      throw std::runtime_error("[oatpp::openssl::configurer::CertificateChainBuffer::configure()]: Error. "
-                               "Could not add ca chain certificate.");
+      throw std::runtime_error("[oatpp::openssl::configurer::CertificateChainBuffer::configure()]: Error. SSL_CTX_add1_chain_cert(): "
+                               + std::string(ERR_error_string(ERR_get_error(), nullptr)));
     }
   }
 }

@@ -49,7 +49,7 @@ public:
    * considered intermediate ca certificates.
    */
   CertificateChainBuffer(const void *certificateChainBuffer, int certificateChainBufferLength);
-  CertificateChainBuffer(const std::string& certificateChainBuffer);
+  CertificateChainBuffer(const oatpp::String& certificateChainBuffer);
 
   void configure(SSL_CTX* ctx) override;
 
