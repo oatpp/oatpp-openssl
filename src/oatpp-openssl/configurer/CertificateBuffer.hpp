@@ -46,6 +46,7 @@ public:
    * @param certificateBufferLength
    */
   CertificateBuffer(const void *certificateBuffer, int certificateBufferLength);
+  CertificateBuffer(const oatpp::String& certificateBuffer);
 
   void configure(SSL_CTX* ctx) override;
 

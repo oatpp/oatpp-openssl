@@ -22,8 +22,8 @@
  *
  ***************************************************************************/
 
-#ifndef oatpp_openssl_configurer_CertificateChainBuffer_hpp
-#define oatpp_openssl_configurer_CertificateChainBuffer_hpp
+#ifndef oatpp_openssl_configurer_CaCertificateBuffer_hpp
+#define oatpp_openssl_configurer_CaCertificateBuffer_hpp
 
 #include "ContextConfigurer.hpp"
 
@@ -32,24 +32,21 @@
 namespace oatpp { namespace openssl { namespace configurer {
 
 /**
- * Context configurer for certificate chain file.
+ * Context configurer for setting trusted Certificate Authorities (CA's) for the TLS connection
  * @extends &id:oatpp::openssl::configurer::ContextConfigurer;.
  */
-class CertificateChainBuffer : public ContextConfigurer {
+class CaCertificateBundleBuffer : public ContextConfigurer {
 private:
-    std::shared_ptr<STACK_OF(X509_INFO)> m_certificates;
+  std::shared_ptr<STACK_OF(X509_INFO)> m_certificates;
 public:
 
   /**
    * Constructor.
-   * @param certificateChainBuffer
-   * @param certificateChainBufferLength
-   *
-   * The first certificate in [certificateChainBuffer] is considered the leaf certificate and the remaining are
-   * considered intermediate ca certificates.
+   * @param certificateBuffer PEM formatted buffer containing one or more certificates
+   * @param certificateBufferLength length of buffer in bytes (passing 0 is interpreted as a no-op)
    */
-  CertificateChainBuffer(const void *certificateChainBuffer, int certificateChainBufferLength);
-  CertificateChainBuffer(const oatpp::String& certificateChainBuffer);
+  CaCertificateBundleBuffer(const void *certificateBuffer, int certificateBufferLength);
+  CaCertificateBundleBuffer(const oatpp::String& certificateBuffer);
 
   void configure(SSL_CTX* ctx) override;
 
@@ -57,4 +54,4 @@ public:
 
 }}}
 
-#endif // oatpp_openssl_configurer_CertificateChainBuffer_hpp
+#endif // oatpp_openssl_configurer_CaCertificateBuffer_hpp

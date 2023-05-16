@@ -46,6 +46,7 @@ public:
    * @param privateKeyBufferLength
    */
   PrivateKeyBuffer(const void *privateKeyBuffer, int privateKeyBufferLength);
+  PrivateKeyBuffer(const oatpp::String& privateKeyBuffer);
 
   void configure(SSL_CTX* ctx) override;
 
