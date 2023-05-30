@@ -19,6 +19,8 @@ add_library(${OATPP_THIS_MODULE_NAME}
         oatpp-openssl/configurer/CertificateFile.cpp
         oatpp-openssl/configurer/CertificateFile.hpp
         oatpp-openssl/configurer/ContextConfigurer.hpp
+        oatpp-openssl/configurer/Groups.cpp
+        oatpp-openssl/configurer/Groups.hpp
         oatpp-openssl/configurer/PeerCertificateVerification.cpp
         oatpp-openssl/configurer/PeerCertificateVerification.hpp
         oatpp-openssl/configurer/PrivateKeyBuffer.cpp
