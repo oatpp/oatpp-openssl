@@ -1,0 +1,23 @@
+# use this file to generate the test certificate:
+# openssl req -new -x509 -days 1800 -key test_key.pem -out test_cert.crt -config oatpp.cnf
+# inspect certificate:
+# openssl x509 -in test_cert.crt -noout -text
+
+[req]
+distinguished_name = req_dname
+prompt = no
+x509_extensions = ext
+default_md = sha256
+
+[req_dname]
+C = UA
+ST = Kiev
+L = City
+O = oatpp
+OU = hq
+CN = localhost
+emailAddress = lganzzzo@gmail.com
+
+[ext]
+subjectAltName = DNS:localhost,DNS:virtualhost
+

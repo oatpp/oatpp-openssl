@@ -32,6 +32,7 @@
 #include "oatpp-openssl/client/ConnectionProvider.hpp"
 #include "oatpp-openssl/configurer/TemporaryDhParamsFile.hpp"
 #include "oatpp-openssl/server/ConnectionProvider.hpp"
+#include "oatpp-openssl/configurer/TrustStore.hpp"
 
 #include "oatpp/web/client/HttpRequestExecutor.hpp"
 
@@ -135,6 +136,8 @@ public:
     }
 
     auto config = oatpp::openssl::Config::createDefaultClientConfigShared();
+    OATPP_LOGD("oatpp::openssl::Config", "trust='%s'", CERT_CRT_PATH);
+    config->addContextConfigurer(std::make_shared<oatpp::openssl::configurer::TrustStore>(CERT_CRT_PATH, nullptr));
     return oatpp::openssl::client::ConnectionProvider::createShared(config, streamProvider);
 
   }());
