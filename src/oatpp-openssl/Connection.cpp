@@ -24,8 +24,7 @@
  ***************************************************************************/
 
 #include "Connection.hpp"
-
-//#include <openssl/err.h>
+#include "ErrorStack.hpp"
 
 namespace oatpp { namespace openssl {
 
@@ -52,8 +51,6 @@ void Connection::ConnectionContext::init() {
 
     do {
 
-      //ERR_clear_error();
-
       m_connection->m_readAction = async::Action::createActionByType(async::Action::TYPE_NONE);
       m_connection->m_writeAction = async::Action::createActionByType(async::Action::TYPE_NONE);
 
@@ -71,10 +68,8 @@ void Connection::ConnectionContext::init() {
         case SSL_ERROR_WANT_WRITE:
           break;
         default:
-          //std::string errStr = std::string(ERR_error_string(ERR_get_error(), nullptr));
-          //OATPP_LOGE("[oatpp::openssl::Connection::ConnectionContext::init()]", "Error. Handshake failed. code=%d, msg='%s'", err, errStr.c_str());
-          //throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::init()]: Error. Handshake failed. " + errStr);
-          return;
+          ErrorStack::logErrors("[oatpp::openssl::Connection::ConnectionContext::init()]");
+          throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::init()]: Error. Handshake failed.");
       }
 
     } while(res != 1);
@@ -119,9 +114,8 @@ async::CoroutineStarter Connection::ConnectionContext::initAsync() {
         case SSL_ERROR_WANT_WRITE:
           break;
         default:
-          //OATPP_LOGE("[oatpp::openssl::Connection::ConnectionContext::initAsync()]", "Error. Handshake failed. err=%d, errno=%d", err, er);
-          //throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::initAsync()]: Error. Handshake failed.");
-          return finish();
+          ErrorStack::logErrors("[oatpp::openssl::Connection::ConnectionContext::initAsync()]");
+          return error<Error>("[oatpp::openssl::Connection::ConnectionContext::initAsync()]: Error. Handshake failed.");
       }
 
       if(res == 1) {

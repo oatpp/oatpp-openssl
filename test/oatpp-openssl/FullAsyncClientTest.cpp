@@ -30,6 +30,7 @@
 
 #include "oatpp-openssl/client/ConnectionProvider.hpp"
 #include "oatpp-openssl/server/ConnectionProvider.hpp"
+#include "oatpp-openssl/configurer/TrustStore.hpp"
 
 #include "oatpp/web/client/HttpRequestExecutor.hpp"
 
@@ -117,6 +118,8 @@ public:
     }
 
     auto config = oatpp::openssl::Config::createDefaultClientConfigShared();
+    OATPP_LOGD("oatpp::openssl::Config", "trust='%s'", CERT_CRT_PATH);
+    config->addContextConfigurer(std::make_shared<oatpp::openssl::configurer::TrustStore>(CERT_CRT_PATH, nullptr));
     return oatpp::openssl::client::ConnectionProvider::createShared(config, streamProvider);
 
   }());
@@ -162,6 +165,7 @@ public:
   }
 
   Action handleError(Error* error) override {
+    SUCCESS_COUNTER = -2;
     if(error->is<oatpp::AsyncIOError>()) {
       auto e = static_cast<oatpp::AsyncIOError*>(error);
       OATPP_LOGD("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "AsyncIOError. %s, %d", e->what(), e->getCode());
@@ -213,6 +217,7 @@ public:
   }
 
   Action handleError(Error* error) override {
+    SUCCESS_COUNTER = -2;
     if(error) {
       if(error->is<oatpp::AsyncIOError>()) {
         auto e = static_cast<oatpp::AsyncIOError*>(error);
@@ -253,8 +258,8 @@ void FullAsyncClientTest::onRun() {
     }
 
     while(
-      ClientCoroutine_getRootAsync::SUCCESS_COUNTER != -1 ||
-      ClientCoroutine_echoBodyAsync::SUCCESS_COUNTER != -1
+      ClientCoroutine_getRootAsync::SUCCESS_COUNTER >= 0 ||
+      ClientCoroutine_echoBodyAsync::SUCCESS_COUNTER >= 0
     ) {
 
       OATPP_LOGD("Client", "Root=%d, Body=%d",
@@ -273,8 +278,8 @@ void FullAsyncClientTest::onRun() {
       }
     }
 
-    OATPP_ASSERT(ClientCoroutine_getRootAsync::SUCCESS_COUNTER == -1); // -1 is success
-    OATPP_ASSERT(ClientCoroutine_echoBodyAsync::SUCCESS_COUNTER == -1); // -1 is success
+    OATPP_ASSERT(ClientCoroutine_getRootAsync::SUCCESS_COUNTER == -1); // -1 is success, -2 error
+    OATPP_ASSERT(ClientCoroutine_echoBodyAsync::SUCCESS_COUNTER == -1); // -1 is success, -2 error
 
     executor->waitTasksFinished(); // Wait executor tasks before quit.
     executor->stop();
