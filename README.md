@@ -21,7 +21,7 @@ OpenSSL installed.
 const char* pemFile = "path/to/file.pem";
 const char* crtFile = "path/to/file.crt";
 
-auto config = oatpp::openssl::Config::createDefaultServerConfig(pemFile, crtFile);
+auto config = oatpp::openssl::Config::createDefaultServerConfigShared(pemFile, crtFile);
 auto connectionProvider = oatpp::openssl::server::ConnectionProvider::createShared(config, {"localhost", 443});
 
 ```
@@ -32,10 +32,14 @@ auto connectionProvider = oatpp::openssl::server::ConnectionProvider::createShar
 
 #include "oatpp-openssl/client/ConnectionProvider.hpp"
 #include "oatpp-openssl/Config.hpp"
+#include "oatpp-openssl/configurer/TrustStore.hpp"
 
 ...
 
-auto config = oatpp::openssl::Config::createShared();
+const char* trust = "path/to/truststore";
+
+auto config = oatpp::openssl::Config::createDefaultClientConfigShared();
+config->addContextConfigurer(std::make_shared<oatpp::openssl::configurer::TrustStore>(trust, nullptr));
 auto connectionProvider = oatpp::openssl::client::ConnectionProvider::createShared(config, {"httpbin.org", 443});
 
 ```

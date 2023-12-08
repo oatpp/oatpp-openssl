@@ -4,6 +4,8 @@ add_library(${OATPP_THIS_MODULE_NAME}
         oatpp-openssl/Config.hpp
         oatpp-openssl/Connection.cpp
         oatpp-openssl/Connection.hpp
+        oatpp-openssl/ErrorStack.cpp
+        oatpp-openssl/ErrorStack.hpp
         oatpp-openssl/client/ConnectionProvider.cpp
         oatpp-openssl/client/ConnectionProvider.hpp
         oatpp-openssl/server/ConnectionProvider.cpp
@@ -19,6 +21,8 @@ add_library(${OATPP_THIS_MODULE_NAME}
         oatpp-openssl/configurer/CertificateFile.cpp
         oatpp-openssl/configurer/CertificateFile.hpp
         oatpp-openssl/configurer/ContextConfigurer.hpp
+        oatpp-openssl/configurer/Groups.cpp
+        oatpp-openssl/configurer/Groups.hpp
         oatpp-openssl/configurer/PeerCertificateVerification.cpp
         oatpp-openssl/configurer/PeerCertificateVerification.hpp
         oatpp-openssl/configurer/PrivateKeyBuffer.cpp
@@ -27,6 +31,8 @@ add_library(${OATPP_THIS_MODULE_NAME}
         oatpp-openssl/configurer/PrivateKeyFile.hpp
         oatpp-openssl/configurer/TemporaryDhParamsFile.cpp
         oatpp-openssl/configurer/TemporaryDhParamsFile.hpp
+        oatpp-openssl/configurer/TrustStore.cpp
+        oatpp-openssl/configurer/TrustStore.hpp
 )
 
 set_target_properties(${OATPP_THIS_MODULE_NAME} PROPERTIES

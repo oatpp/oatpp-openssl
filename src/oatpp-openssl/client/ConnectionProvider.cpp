@@ -125,6 +125,7 @@ provider::ResourceHandle<data::stream::IOStream> ConnectionProvider::get(){
   SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
   SSL_set_connect_state(ssl);
   SSL_set_tlsext_host_name(ssl, host->c_str());
+  SSL_set1_host(ssl, host->c_str());
 
   auto sslConnection = std::make_shared<Connection>(ssl, transportStream);
 
@@ -184,6 +185,7 @@ oatpp::async::CoroutineStarterForResult<const provider::ResourceHandle<data::str
       SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
       SSL_set_connect_state(ssl);
       SSL_set_tlsext_host_name(ssl, host->c_str());
+      SSL_set1_host(ssl, host->c_str());
 
       m_connection = std::make_shared<Connection>(ssl, m_stream);
 
