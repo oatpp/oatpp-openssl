@@ -22,7 +22,7 @@ const char* pemFile = "path/to/file.pem";
 const char* crtFile = "path/to/file.crt";
 
 auto config = oatpp::openssl::Config::createDefaultServerConfigShared(pemFile, crtFile);
-auto connectionProvider = oatpp::openssl::server::ConnectionProvider::createShared(config, {"localhost", 8443});
+auto connectionProvider = oatpp::openssl::server::ConnectionProvider::createShared(config, {"localhost", 443});
 
 ```
 
