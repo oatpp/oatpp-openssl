@@ -68,8 +68,9 @@ void Connection::ConnectionContext::init() {
         case SSL_ERROR_WANT_WRITE:
           break;
         default:
-          ErrorStack::logErrors("[oatpp::openssl::Connection::ConnectionContext::init()]");
-          throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::init()]: Error. Handshake failed.");
+//          ErrorStack::logErrors("[oatpp::openssl::Connection::ConnectionContext::init()]");
+//          throw std::runtime_error("[oatpp::openssl::Connection::ConnectionContext::init()]: Error. Handshake failed.");
+          return;
       }
 
     } while(res != 1);
@@ -114,8 +115,9 @@ async::CoroutineStarter Connection::ConnectionContext::initAsync() {
         case SSL_ERROR_WANT_WRITE:
           break;
         default:
-          ErrorStack::logErrors("[oatpp::openssl::Connection::ConnectionContext::initAsync()]");
-          return error<Error>("[oatpp::openssl::Connection::ConnectionContext::initAsync()]: Error. Handshake failed.");
+//          ErrorStack::logErrors("[oatpp::openssl::Connection::ConnectionContext::initAsync()]");
+//          return error<Error>("[oatpp::openssl::Connection::ConnectionContext::initAsync()]: Error. Handshake failed.");
+          return finish();
       }
 
       if(res == 1) {
