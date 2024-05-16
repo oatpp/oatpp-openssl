@@ -37,7 +37,7 @@
 #include "oatpp/web/server/AsyncHttpConnectionHandler.hpp"
 #include "oatpp/web/server/HttpRouter.hpp"
 
-#include "oatpp/parser/json/mapping/ObjectMapper.hpp"
+#include "oatpp/json/ObjectMapper.hpp"
 
 #include "oatpp/network/tcp/server/ConnectionProvider.hpp"
 #include "oatpp/network/tcp/client/ConnectionProvider.hpp"
@@ -46,7 +46,7 @@
 #include "oatpp/network/virtual_/server/ConnectionProvider.hpp"
 #include "oatpp/network/virtual_/Interface.hpp"
 
-#include "oatpp/core/macro/component.hpp"
+#include "oatpp/macro/component.hpp"
 
 #include "oatpp-test/web/ClientServerTestRunner.hpp"
 
@@ -84,8 +84,8 @@ public:
       streamProvider = oatpp::network::tcp::server::ConnectionProvider::createShared({"localhost", m_port});
     }
 
-    OATPP_LOGD("oatpp::openssl::Config", "pem='%s'", CERT_PEM_PATH);
-    OATPP_LOGD("oatpp::openssl::Config", "crt='%s'", CERT_CRT_PATH);
+    OATPP_LOGd("oatpp::openssl::Config", "pem='{}'", CERT_PEM_PATH);
+    OATPP_LOGd("oatpp::openssl::Config", "crt='{}'", CERT_CRT_PATH);
 
     auto config = oatpp::openssl::Config::createDefaultServerConfigShared(CERT_CRT_PATH, CERT_PEM_PATH);
     return oatpp::openssl::server::ConnectionProvider::createShared(config, streamProvider);
@@ -103,7 +103,7 @@ public:
   }());
 
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::data::mapping::ObjectMapper>, objectMapper)([] {
-    return oatpp::parser::json::mapping::ObjectMapper::createShared();
+    return std::make_shared<oatpp::json::ObjectMapper>();
   }());
 
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ClientConnectionProvider>, clientConnectionProvider)([this] {
@@ -118,7 +118,7 @@ public:
     }
 
     auto config = oatpp::openssl::Config::createDefaultClientConfigShared();
-    OATPP_LOGD("oatpp::openssl::Config", "trust='%s'", CERT_CRT_PATH);
+    OATPP_LOGd("oatpp::openssl::Config", "trust='{}'", CERT_CRT_PATH);
     config->addContextConfigurer(std::make_shared<oatpp::openssl::configurer::TrustStore>(CERT_CRT_PATH, nullptr));
     return oatpp::openssl::client::ConnectionProvider::createShared(config, streamProvider);
 
@@ -168,9 +168,9 @@ public:
     SUCCESS_COUNTER = -2;
     if(error->is<oatpp::AsyncIOError>()) {
       auto e = static_cast<oatpp::AsyncIOError*>(error);
-      OATPP_LOGD("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "AsyncIOError. %s, %d", e->what(), e->getCode());
+      OATPP_LOGd("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "AsyncIOError. {}, {}", e->what(), e->getCode());
     } else {
-      OATPP_LOGD("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "Error. %s", error->what());
+      OATPP_LOGd("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "Error. {}", error->what());
     }
     return error;
   }
@@ -221,9 +221,9 @@ public:
     if(error) {
       if(error->is<oatpp::AsyncIOError>()) {
         auto e = static_cast<oatpp::AsyncIOError*>(error);
-        OATPP_LOGD("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "AsyncIOError. %s, %d", e->what(), e->getCode());
+        OATPP_LOGd("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "AsyncIOError. {}, {}", e->what(), e->getCode());
       } else {
-        OATPP_LOGD("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "Error. %s", error->what());
+        OATPP_LOGd("[FullAsyncClientTest::ClientCoroutine_echoBodyAsync::handleError()]", "Error. {}", error->what());
       }
     }
     return error;
@@ -262,7 +262,7 @@ void FullAsyncClientTest::onRun() {
       ClientCoroutine_echoBodyAsync::SUCCESS_COUNTER >= 0
     ) {
 
-      OATPP_LOGD("Client", "Root=%d, Body=%d",
+      OATPP_LOGd("Client", "Root={}, Body={}",
         ClientCoroutine_getRootAsync::SUCCESS_COUNTER.load(),
         ClientCoroutine_echoBodyAsync::SUCCESS_COUNTER.load()
       );
@@ -270,11 +270,11 @@ void FullAsyncClientTest::onRun() {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       if(ClientCoroutine_getRootAsync::SUCCESS_COUNTER == iterations){
         ClientCoroutine_getRootAsync::SUCCESS_COUNTER = -1;
-        OATPP_LOGD("Client", "getRootAsync - DONE!");
+        OATPP_LOGd("Client", "getRootAsync - DONE!");
       }
       if(ClientCoroutine_echoBodyAsync::SUCCESS_COUNTER == iterations){
         ClientCoroutine_echoBodyAsync::SUCCESS_COUNTER = -1;
-        OATPP_LOGD("Client", "echoBodyAsync - DONE!");
+        OATPP_LOGd("Client", "echoBodyAsync - DONE!");
       }
     }
 

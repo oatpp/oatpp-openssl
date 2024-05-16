@@ -22,9 +22,12 @@
  *
  ***************************************************************************/
 
-#include "oatpp/core/base/Environment.hpp"
-#include "openssl/err.h"
+#include "oatpp/Environment.hpp"
 #include "ErrorStack.hpp"
+
+#include "oatpp/base/Log.hpp"
+
+#include <openssl/err.h>
 
 namespace oatpp { namespace openssl {
 
@@ -32,7 +35,7 @@ void ErrorStack::logErrors(const char *tag) {
   ERR_print_errors_cb(ErrorStack::logOneError, (void*)tag);
 }
 int ErrorStack::logOneError(const char *str, size_t len, void *u) {
-  OATPP_LOGE((const char *)u, str);
+  OATPP_LOGd((const char *)u, str);
   return 1;
 }
 

@@ -26,7 +26,7 @@
 #define oatpp_test_web_app_Client_hpp
 
 #include "oatpp/web/client/ApiClient.hpp"
-#include "oatpp/core/macro/codegen.hpp"
+#include "oatpp/macro/codegen.hpp"
 
 namespace oatpp { namespace test { namespace openssl { namespace app {
   

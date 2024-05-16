@@ -26,9 +26,9 @@
 #ifndef oatpp_openssl_Connection_hpp
 #define oatpp_openssl_Connection_hpp
 
-#include "oatpp/core/provider/Provider.hpp"
-#include "oatpp/core/data/stream/Stream.hpp"
-#include "oatpp/core/data/buffer/FIFOBuffer.hpp"
+#include "oatpp/provider/Provider.hpp"
+#include "oatpp/data/stream/Stream.hpp"
+#include "oatpp/data/buffer/FIFOBuffer.hpp"
 
 #include <openssl/ssl.h>
 

@@ -27,10 +27,10 @@
 
 #include "./DTOs.hpp"
 #include "oatpp/web/server/api/ApiController.hpp"
-#include "oatpp/parser/json/mapping/ObjectMapper.hpp"
-#include "oatpp/core/utils/ConversionUtils.hpp"
-#include "oatpp/core/macro/codegen.hpp"
-#include "oatpp/core/macro/component.hpp"
+#include "oatpp/json/ObjectMapper.hpp"
+#include "oatpp/utils/Conversion.hpp"
+#include "oatpp/macro/codegen.hpp"
+#include "oatpp/macro/component.hpp"
 
 #include <sstream>
 
@@ -69,7 +69,7 @@ public:
            QUERY(String, name), QUERY(Int32, age))
   {
     auto dto = TestDto::createShared();
-    dto->testValue = "name=" + name + "&age=" + oatpp::utils::conversion::int32ToStr(age);
+    dto->testValue = "name=" + name + "&age=" + oatpp::utils::Conversion::int32ToStr(age);
     return createDtoResponse(Status::CODE_200, dto);
   }
 

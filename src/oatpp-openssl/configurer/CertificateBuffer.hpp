@@ -27,7 +27,7 @@
 
 #include "ContextConfigurer.hpp"
 
-#include "oatpp/core/Types.hpp"
+#include "oatpp/Types.hpp"
 
 namespace oatpp { namespace openssl { namespace configurer {
 

@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "oatpp/core/Types.hpp"
+#include "oatpp/Types.hpp"
 #include "TrustStore.hpp"
 #include "openssl/ssl.h"
 #include "oatpp-openssl/ErrorStack.hpp"
