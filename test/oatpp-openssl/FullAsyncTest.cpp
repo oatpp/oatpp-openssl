@@ -202,7 +202,7 @@ void FullAsyncTest::onRun() {
       if((i + 1) % iterationsStep == 0) {
         auto ticks = oatpp::Environment::getMicroTickCount() - lastTick;
         lastTick = oatpp::Environment::getMicroTickCount();
-        OATPP_LOGd("i", "%d, tick={}", i + 1, ticks);
+        OATPP_LOGd("i", "{}, tick={}", i + 1, ticks);
       }
       
     }
